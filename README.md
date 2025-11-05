@@ -100,3 +100,5 @@ Brindar una respuesta confiable y rápida a los dueños de mascotas mediante un 
 
 ---
 
+figma: https://www.figma.com/proto/F7BhaSTQGOeAWDWo2GYCt0/Untitled?node-id=1-4&t=alggLPGFDtNQpLVI-0&scaling=scale-down&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=1%3A4
+
