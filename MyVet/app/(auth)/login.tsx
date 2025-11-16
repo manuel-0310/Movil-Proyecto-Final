@@ -1,25 +1,55 @@
 import { useState, useContext } from "react";
 import { AuthContext } from "@/contexts/AuthContext";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 import { Link, useRouter } from "expo-router";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { supabase } from "@/utils/supabase";
 
 export default function Login() {
   const router = useRouter();
   const { login } = useContext(AuthContext);
+  const { markFirstLogin } = useOnboarding();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
       alert("Por favor completa todos los campos");
       return;
     }
+    
+    setIsLoading(true);
+    
     try {
       const data = await login(email, password);
-      if (data?.user) router.replace("/(tabs)/home");
-    } catch {
+      
+      if (data?.user) {
+        // Verificar si el usuario tiene mascotas registradas
+        const { data: pets, error } = await supabase
+          .from("pets")
+          .select("id")
+          .eq("user_id", data.user.id)
+          .limit(1);
+
+        if (error) {
+          console.error("Error checking pets:", error);
+        }
+
+        // Si no tiene mascotas, es su primera vez
+        if (!pets || pets.length === 0) {
+          await markFirstLogin();
+          router.replace("/onboarding/first-pet");
+        } else {
+          // Ya tiene mascotas, ir directo al home
+          router.replace("/(tabs)/home");
+        }
+      }
+    } catch (error) {
       alert("Correo o contraseña incorrectos");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -39,6 +69,9 @@ export default function Login() {
             onChangeText={setEmail}
             selectionColor="#7B2CBF"
             underlineColorAndroid="transparent"
+            editable={!isLoading}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
           <TextInput
             placeholder="Password"
@@ -49,10 +82,19 @@ export default function Login() {
             onChangeText={setPassword}
             selectionColor="#7B2CBF"
             underlineColorAndroid="transparent"
+            editable={!isLoading}
           />
 
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Log In</Text>
+          <TouchableOpacity 
+            style={[styles.button, isLoading && styles.buttonDisabled]} 
+            onPress={handleLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.buttonText}>Log In</Text>
+            )}
           </TouchableOpacity>
 
           <Link href="/reset" style={styles.link}>
@@ -83,13 +125,17 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     fontSize: 16,
   },
-  
   button: {
     backgroundColor: "#7B2CBF",
     paddingVertical: 15,
     borderRadius: 10,
     width: "100%",
     alignItems: "center",
+    justifyContent: "center",
+    minHeight: 50,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: { color: "white", fontSize: 18, fontWeight: "600" },
   link: { color: "#7B2CBF", marginTop: 10 },

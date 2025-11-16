@@ -1,12 +1,14 @@
 import { useState, useContext } from "react";
 import { AuthContext } from "@/contexts/AuthContext";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 import { Link, useRouter } from "expo-router";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, ScrollView,TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Register() {
   const router = useRouter();
   const { register } = useContext(AuthContext);
+  const { markFirstLogin } = useOnboarding();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -16,6 +18,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async () => {
     if (!name || !email || !phone || !city || !password || !confirmPassword) {
@@ -28,16 +31,46 @@ export default function Register() {
       return;
     }
 
+    if (password.length < 6) {
+      alert("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      await register(email, password, name, phone, city);
-      alert("✅ Cuenta creada, revisa tu correo para confirmar.");
-      router.push("/login");
-    } catch {
-      alert("❌ Error al crear la cuenta");
+      const data = await register(email, password, name, phone, city);
+      
+      if (data?.user) {
+        // Al registrarse, siempre es primera vez
+        await markFirstLogin();
+        
+        alert("✅ Cuenta creada exitosamente!");
+        // Redirigir directamente a crear mascota
+        router.replace("/onboarding/first-pet");
+      } else {
+        // Si no hay user en data, pero tampoco error, mostrar mensaje de verificación
+        alert("✅ Cuenta creada, revisa tu correo para confirmar.");
+        router.push("/login");
+      }
+    } catch (error: any) {
+      console.error("Register error:", error);
+      alert("❌ Error al crear la cuenta: " + (error.message || "Intenta de nuevo"));
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
+    <KeyboardAvoidingView
+        style={{flex:1}}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={0}
+      >
+        <ScrollView 
+      contentContainerStyle={{ flexGrow: 1 }}
+      showsVerticalScrollIndicator={false}
+    >
     <View style={styles.background}>
       <View style={styles.container}>
         <Text style={styles.logo}>MyVet</Text>
@@ -45,10 +78,52 @@ export default function Register() {
         <View style={styles.card}>
           <Text style={styles.title}>Create Account</Text>
 
-          <TextInput placeholder="Name" style={styles.input} placeholderTextColor="#777" value={name} onChangeText={setName} selectionColor="#7B2CBF" underlineColorAndroid="transparent" />
-          <TextInput placeholder="Email" style={styles.input} placeholderTextColor="#777" value={email} onChangeText={setEmail} keyboardType="email-address" selectionColor="#7B2CBF" underlineColorAndroid="transparent" />
-          <TextInput placeholder="Phone number" style={styles.input} placeholderTextColor="#777" value={phone} onChangeText={setPhone} keyboardType="phone-pad" selectionColor="#7B2CBF" underlineColorAndroid="transparent" />
-          <TextInput placeholder="City" style={styles.input} placeholderTextColor="#777" value={city} onChangeText={setCity} selectionColor="#7B2CBF" underlineColorAndroid="transparent" />
+          <TextInput 
+            placeholder="Name" 
+            style={styles.input} 
+            placeholderTextColor="#777" 
+            value={name} 
+            onChangeText={setName} 
+            selectionColor="#7B2CBF" 
+            underlineColorAndroid="transparent"
+            editable={!isLoading}
+          />
+          
+          <TextInput 
+            placeholder="Email" 
+            style={styles.input} 
+            placeholderTextColor="#777" 
+            value={email} 
+            onChangeText={setEmail} 
+            keyboardType="email-address" 
+            selectionColor="#7B2CBF" 
+            underlineColorAndroid="transparent"
+            autoCapitalize="none"
+            editable={!isLoading}
+          />
+          
+          <TextInput 
+            placeholder="Phone number" 
+            style={styles.input} 
+            placeholderTextColor="#777" 
+            value={phone} 
+            onChangeText={setPhone} 
+            keyboardType="phone-pad" 
+            selectionColor="#7B2CBF" 
+            underlineColorAndroid="transparent"
+            editable={!isLoading}
+          />
+          
+          <TextInput 
+            placeholder="City" 
+            style={styles.input} 
+            placeholderTextColor="#777" 
+            value={city} 
+            onChangeText={setCity} 
+            selectionColor="#7B2CBF" 
+            underlineColorAndroid="transparent"
+            editable={!isLoading}
+          />
           
           <View style={styles.passwordContainer}>
             <TextInput 
@@ -60,10 +135,12 @@ export default function Register() {
               secureTextEntry={!showPassword}
               selectionColor="#7B2CBF"
               underlineColorAndroid="transparent"
+              editable={!isLoading}
             />
             <TouchableOpacity 
               onPress={() => setShowPassword(!showPassword)}
               style={styles.eyeIcon}
+              disabled={isLoading}
             >
               <Ionicons 
                 name={showPassword ? "eye-off" : "eye"} 
@@ -83,10 +160,12 @@ export default function Register() {
               secureTextEntry={!showConfirmPassword}
               selectionColor="#7B2CBF"
               underlineColorAndroid="transparent"
+              editable={!isLoading}
             />
             <TouchableOpacity 
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               style={styles.eyeIcon}
+              disabled={isLoading}
             >
               <Ionicons 
                 name={showConfirmPassword ? "eye-off" : "eye"} 
@@ -96,8 +175,16 @@ export default function Register() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={handleRegister}>
-            <Text style={styles.buttonText}>Register</Text>
+          <TouchableOpacity 
+            style={[styles.button, isLoading && styles.buttonDisabled]} 
+            onPress={handleRegister}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.buttonText}>Register</Text>
+            )}
           </TouchableOpacity>
 
           <Link href="/reset" style={styles.link}>
@@ -113,6 +200,8 @@ export default function Register() {
         </View>
       </View>
     </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -154,6 +243,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: "100%",
     alignItems: "center",
+    justifyContent: "center",
+    minHeight: 50,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: { color: "white", fontSize: 18, fontWeight: "600" },
   link: { color: "#7B2CBF", marginTop: 10 },
