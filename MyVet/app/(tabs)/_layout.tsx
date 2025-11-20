@@ -25,7 +25,8 @@ function BubbleTabBar(props: any) {
 
   // Detectar si estamos dentro de un chat individual
   const isChatDetail =
-  pathname.startsWith("/chats/") && pathname !== "/chats";
+  pathname.startsWith("/chats/") && pathname !== "/chats" ||
+  pathname.startsWith("/add-pet/") || pathname.startsWith("/pet-detail/");
 
 
 

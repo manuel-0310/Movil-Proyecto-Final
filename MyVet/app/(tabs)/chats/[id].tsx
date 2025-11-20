@@ -33,6 +33,7 @@ export default function ChatConversationScreen() {
   const [sending, setSending] = useState(false);
   const [assistantTyping, setAssistantTyping] = useState(false);
   const [chatTitle, setChatTitle] = useState("Cargando...");
+  const [shouldAutoRespond, setShouldAutoRespond] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   /** ----------------------------------------------------------
@@ -44,6 +45,14 @@ export default function ChatConversationScreen() {
       loadMessages();
     }
   }, [id, user]);
+
+  // Auto-responder cuando hay un mensaje inicial del usuario
+  useEffect(() => {
+    if (shouldAutoRespond && messages.length === 1 && messages[0].role === 'user') {
+      handleAutoResponse();
+      setShouldAutoRespond(false);
+    }
+  }, [messages, shouldAutoRespond]);
 
   const loadChat = async () => {
     try {
@@ -70,11 +79,84 @@ export default function ChatConversationScreen() {
 
       if (error) throw error;
       setMessages(data || []);
+      
+      // Si hay exactamente 1 mensaje y es del usuario, auto-responder
+      if (data && data.length === 1 && data[0].role === 'user') {
+        setShouldAutoRespond(true);
+      }
     } catch (error) {
       console.error("Error al cargar mensajes:", error);
       Alert.alert("Error", "No se pudieron cargar los mensajes");
     } finally {
       setLoading(false);
+    }
+  };
+
+  /** ----------------------------------------------------------
+   *  AUTO-RESPUESTA PARA MENSAJE INICIAL DESDE HOME
+   * ---------------------------------------------------------- */
+  const handleAutoResponse = async () => {
+    if (messages.length !== 1 || messages[0].role !== 'user') return;
+
+    const userMessage = messages[0].content;
+
+    try {
+      setAssistantTyping(true);
+
+      // Generar título
+      const aiTitle = await generateTitleFromAI(userMessage);
+      await supabase
+        .from("chats")
+        .update({
+          title: aiTitle,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+      setChatTitle(aiTitle);
+
+      // Preparar prompt para IA
+      const conversationHistory = [
+        { role: "system", content: VETERINARY_SYSTEM_PROMPT },
+        { role: "user", content: userMessage },
+      ];
+
+      const prompt = conversationHistory
+        .map(m => `${m.role.toUpperCase()}: ${m.content}`)
+        .join("\n\n");
+
+      const completion = await openai.responses.create({
+        model: "gpt-4o-mini",
+        input: prompt,
+        temperature: 0.7,
+        max_output_tokens: 1000,
+      });
+
+      const assistantMessage = completion.output_text?.trim() || "Lo siento, no pude generar una respuesta.";
+
+      setAssistantTyping(false);
+
+      // Guardar respuesta
+      const { data: assistantMessageData } = await supabase
+        .from("messages")
+        .insert([{ chat_id: id, role: "assistant", content: assistantMessage }])
+        .select()
+        .single();
+
+      setMessages((prev) => [...prev, assistantMessageData]);
+
+      await supabase
+        .from("chats")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", id);
+
+      setTimeout(
+        () => flatListRef.current?.scrollToEnd({ animated: true }),
+        100
+      );
+    } catch (err) {
+      console.error("Error en auto-respuesta:", err);
+      setAssistantTyping(false);
+      Alert.alert("Error", "No se pudo generar la respuesta automática.");
     }
   };
 
@@ -89,7 +171,7 @@ export default function ChatConversationScreen() {
           {
             role: "system",
             content:
-              "Genera un título muy corto (máximo 6 palabras) que resuma una consulta veterinaria. No respondas nada más."
+              "Genera un título muy corto (máximo 4 palabras) que resuma una consulta veterinaria. No respondas nada más."
           },
           {
             role: "user",
@@ -162,7 +244,6 @@ export default function ChatConversationScreen() {
       ];
 
       /** 5. Llamar a la IA */
-      /** 5. Llamar a la IA */
       const prompt = conversationHistory
         .map(m => `${m.role.toUpperCase()}: ${m.content}`)
         .join("\n\n");
@@ -174,11 +255,7 @@ export default function ChatConversationScreen() {
         max_output_tokens: 1000,
       });
 
-      // obtener texto final
-      const assistantMessage =
-        completion.output_text?.trim()
-
-
+      const assistantMessage = completion.output_text?.trim() || "Lo siento, no pude generar una respuesta.";
 
       setAssistantTyping(false);
 
