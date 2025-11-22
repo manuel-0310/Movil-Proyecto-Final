@@ -33,7 +33,7 @@ function BubbleTabBar(props: any) {
   const routes = [
     { name: "home", path: "/home" },
     { name: "chats", path: "/chats" },
-    { name: "store", path: "/store" },
+    { name: "store", path: "/market" },
     { name: "profile", path: "/profile" },
   ];
 
