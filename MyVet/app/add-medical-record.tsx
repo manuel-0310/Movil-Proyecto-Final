@@ -21,8 +21,6 @@ export default function AddMedicalRecordForm() {
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [description, setDescription] = useState('');
-  const [vetName, setVetName] = useState('');
-  const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {

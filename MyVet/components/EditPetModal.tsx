@@ -1,5 +1,5 @@
 // components/EditPetModal.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,14 +8,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
   Image,
-} from 'react-native';
-import { supabase } from '@/utils/supabase';
-import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
+  Alert,
+  Platform,
+  KeyboardAvoidingView,
+} from "react-native";
+import { supabase } from "@/utils/supabase";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 interface Pet {
   id: string;
@@ -25,6 +26,7 @@ interface Pet {
   sex: string;
   birthday: string;
   photo_url?: string;
+  weight?: number;
 }
 
 interface EditPetModalProps {
@@ -34,244 +36,419 @@ interface EditPetModalProps {
   onSave: () => void;
 }
 
-export default function EditPetModal({
-  visible,
-  pet,
-  onClose,
-  onSave,
-}: EditPetModalProps) {
-  const [name, setName] = useState(pet.name);
-  const [breed, setBreed] = useState(pet.breed);
-  const [type, setType] = useState(pet.type);
-  const [sex, setSex] = useState(pet.sex);
-  const [birthday, setBirthday] = useState(new Date(pet.birthday));
+export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetModalProps) {
+  const [name, setName] = useState("");
+  const [breed, setBreed] = useState("");
+  const [type, setType] = useState("dog");
+  const [sex, setSex] = useState("Male");
+  const [birthday, setBirthday] = useState(new Date());
+  const [weight, setWeight] = useState("");
+  const [photoUri, setPhotoUri] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [loading, setLoading] = useState(false);
+
+  // Breed lists
+  const [dogBreeds, setDogBreeds] = useState<string[]>([]);
+  const [catBreeds, setCatBreeds] = useState<string[]>([]);
+  const [breedModalVisible, setBreedModalVisible] = useState(false);
+  const [breedList, setBreedList] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (pet) {
+      setName(pet.name);
+      setBreed(pet.breed);
+      setType(pet.type);
+      setSex(pet.sex);
+      setBirthday(new Date(pet.birthday));
+      setWeight(pet.weight ? String(pet.weight) : "");
+      setPhotoUri(pet.photo_url || "");
+      setPhotoUrl(pet.photo_url || "");
+    }
+  }, [pet]);
+
+  const fetchDogBreeds = async () => {
+    try {
+      const res = await fetch("https://api.thedogapi.com/v1/breeds");
+      const data = await res.json();
+      setDogBreeds(data.map((b: any) => b.name));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchCatBreeds = async () => {
+    try {
+      const res = await fetch("https://api.thecatapi.com/v1/breeds");
+      const data = await res.json();
+      setCatBreeds(data.map((b: any) => b.name));
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const petTypes = [
-    { key: 'dog', icon: 'paw', label: 'Perro' },
-    { key: 'cat', icon: 'heart', label: 'Gato' },
-    { key: 'bird', icon: 'airplane', label: 'Ave' },
-    { key: 'rabbit', icon: 'happy', label: 'Conejo' },
-    { key: 'hamster', icon: 'radio-button-on', label: 'Hámster' },
-    { key: 'fish', icon: 'water', label: 'Pez' },
-    { key: 'turtle', icon: 'shield', label: 'Tortuga' },
-    { key: 'other', icon: 'ellipsis-horizontal', label: 'Otro' },
+    { key: "dog", label: "Perro" },
+    { key: "cat", label: "Gato" },
+    { key: "bird", label: "Ave" },
+    { key: "rabbit", label: "Conejo" },
+    { key: "fish", label: "Pez" },
+    { key: "other", label: "Otro" },
   ];
+
+  const petIcons: Record<string, { active: any; inactive: any }> = {
+    dog: {
+      active: require("@/assets/icons/dog_white.png"),
+      inactive: require("@/assets/icons/dog_black.png"),
+    },
+    cat: {
+      active: require("@/assets/icons/cat_white.png"),
+      inactive: require("@/assets/icons/cat_black.png"),
+    },
+    bird: {
+      active: require("@/assets/icons/bird_white.png"),
+      inactive: require("@/assets/icons/bird_black.png"),
+    },
+    rabbit: {
+      active: require("@/assets/icons/rabbit_white.png"),
+      inactive: require("@/assets/icons/rabbit_black.png"),
+    },
+    fish: {
+      active: require("@/assets/icons/fish_white.png"),
+      inactive: require("@/assets/icons/fish_black.png"),
+    },
+    other: {
+      active: require("@/assets/icons/other_white.png"),
+      inactive: require("@/assets/icons/other_black.png"),
+    },
+  };
+
+  // 📸 Foto
+  const selectPhoto = () => {
+    Alert.alert("", "Selecciona una opción:", [
+      { text: "Cámara", onPress: pickFromCamera },
+      { text: "Galería", onPress: pickFromGallery },
+      { text: "Cancelar", style: "cancel" },
+    ]);
+  };
+
+  const pickFromCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permiso denegado", "Necesitas dar acceso a la cámara.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled) {
+      const base64 = result.assets[0].base64!;
+      setPhotoUri(result.assets[0].uri);
+      await uploadPhoto(base64);
+    }
+  };
+
+  const pickFromGallery = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permiso denegado", "Necesitas permitir acceso a fotos.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled) {
+      const base64 = result.assets[0].base64!;
+      setPhotoUri(result.assets[0].uri);
+      await uploadPhoto(base64);
+    }
+  };
+
+  const uploadPhoto = async (base64: string) => {
+    try {
+      setUploading(true);
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) {
+        Alert.alert("Error", "Debes iniciar sesión.");
+        return;
+      }
+
+      const userId = userData.user.id;
+      const fileName = `${userId}-${Date.now()}.jpg`;
+
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+      const { error: uploadError } = await supabase.storage
+        .from("pet-photos")
+        .upload(fileName, bytes, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("pet-photos").getPublicUrl(fileName);
+      setPhotoUrl(data.publicUrl);
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === "ios");
+    if (selectedDate) setBirthday(selectedDate);
+  };
+
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Por favor ingresa el nombre de tu mascota');
+      Alert.alert("Error", "Por favor ingresa el nombre de tu mascota");
       return;
     }
 
     try {
-      setLoading(true);
-
       const { error } = await supabase
-        .from('pets')
+        .from("pets")
         .update({
-          name: name.trim(),
-          breed: breed.trim(),
+          name,
           type,
+          breed,
           sex,
-          birthday: birthday.toISOString().split('T')[0],
+          birthday: birthday.toISOString().split("T")[0],
+          photo_url: photoUrl || null,
+          weight: weight ? parseFloat(weight) : null,
         })
-        .eq('id', pet.id);
+        .eq("id", pet.id);
 
       if (error) throw error;
 
-      Alert.alert('¡Éxito!', 'Mascota actualizada correctamente');
+      Alert.alert("¡Éxito!", "Mascota actualizada correctamente");
       onSave();
-    } catch (error: any) {
-      console.error('Error updating pet:', error);
-      Alert.alert('Error', 'No se pudo actualizar la mascota');
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      Alert.alert("Error", "Hubo un error al guardar los cambios: " + err.message);
     }
-  };
-
-  const handleDelete = () => {
-    Alert.alert(
-      'Eliminar Mascota',
-      `¿Estás seguro de que quieres eliminar a ${pet.name}?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { error } = await supabase
-                .from('pets')
-                .delete()
-                .eq('id', pet.id);
-
-              if (error) throw error;
-
-              Alert.alert('Eliminado', 'Mascota eliminada correctamente');
-              onSave();
-            } catch (error: any) {
-              console.error('Error deleting pet:', error);
-              Alert.alert('Error', 'No se pudo eliminar la mascota');
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setBirthday(selectedDate);
-    }
-  };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      {breedModalVisible && (
+        <Modal transparent animationType="fade">
+          <View style={styles.pickerOverlay}>
+            <View style={styles.pickerContainer}>
+              <ScrollView>
+                {breedList.map((b) => (
+                  <TouchableOpacity
+                    key={b}
+                    onPress={() => {
+                      setBreed(b);
+                      setBreedModalVisible(false);
+                    }}
+                    style={{ paddingVertical: 10 }}
+                  >
+                    <Text style={{ fontSize: 16 }}>{b}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity
+                style={{ marginTop: 20 }}
+                onPress={() => setBreedModalVisible(false)}
+              >
+                <Text style={{ textAlign: "center", color: "red" }}>Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
+
       <KeyboardAvoidingView
         style={styles.modalOverlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.modalContainer}>
-          {/* HEADER */}
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={28} color="#111827" />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Edit Pet</Text>
-            <TouchableOpacity onPress={handleDelete}>
+            <Text style={styles.modalTitle}>Editar Mascota</Text>
+            <TouchableOpacity
+              onPress={() => {
+                Alert.alert("Eliminar Mascota", `¿Eliminar a ${pet.name}?`, [
+                  { text: "Cancelar", style: "cancel" },
+                  {
+                    text: "Eliminar",
+                    style: "destructive",
+                    onPress: async () => {
+                      const { error } = await supabase.from("pets").delete().eq("id", pet.id);
+                      if (error) Alert.alert("Error", "No se pudo eliminar la mascota");
+                      else {
+                        Alert.alert("Eliminado", "Mascota eliminada correctamente");
+                        onSave();
+                      }
+                    },
+                  },
+                ]);
+              }}
+            >
               <Ionicons name="trash-outline" size={24} color="#EF4444" />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalContent}>
-            {/* PHOTO */}
-            {pet.photo_url && (
-              <View style={styles.photoContainer}>
-                <Image source={{ uri: pet.photo_url }} style={styles.petPhoto} />
-              </View>
-            )}
+            {/* 📸 FOTO */}
+<Text style={styles.label}>Foto</Text>
 
-            {/* NAME */}
-            <Text style={styles.label}>Pet Name *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Luna"
-              value={name}
-              onChangeText={setName}
-              placeholderTextColor="#9CA3AF"
-            />
+<TouchableOpacity
+  onPress={selectPhoto}
+  activeOpacity={0.8}
+  style={{ alignSelf: "flex-start" }}
+>
+  {photoUri ? (
+    <View style={styles.photoWrapper}>
+      <Image
+        source={{ uri: photoUri }}
+        style={styles.petPhoto}
+      />
+      <View style={styles.cameraOverlay}>
+        <Ionicons name="camera" size={22} color="#fff" />
+      </View>
+    </View>
+  ) : (
+    <View style={styles.uploadBtn}>
+      <Text style={styles.uploadText}>Subir Foto</Text>
+      <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
+    </View>
+  )}
+</TouchableOpacity>
 
-            {/* TYPE */}
-            <Text style={styles.label}>Pet Type *</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.typeScroll}
-            >
-              {petTypes.map((t) => (
-                <TouchableOpacity
-                  key={t.key}
-                  style={[
-                    styles.typeButton,
-                    type === t.key && styles.typeButtonActive,
-                  ]}
-                  onPress={() => setType(t.key)}
-                >
-                  <Ionicons
-                    name={t.icon as any}
-                    size={24}
-                    color={type === t.key ? '#fff' : '#7B2CBF'}
-                  />
-                  <Text
-                    style={[
-                      styles.typeLabel,
-                      type === t.key && styles.typeLabelActive,
-                    ]}
+            {/* NOMBRE */}
+            <Text style={styles.label}>Nombre</Text>
+            <TextInput style={styles.input} value={name} onChangeText={setName} />
+
+            {/* TIPO */}
+            <Text style={styles.label}>Tipo de Mascota</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.typeRow}>
+                {petTypes.map((p) => (
+                  <TouchableOpacity
+                    key={p.key}
+                    style={[styles.typeBtn, type === p.key && styles.typeBtnActive]}
+                    onPress={() => {
+                      setType(p.key);
+                      if (p.key === "dog") {
+                        fetchDogBreeds();
+                        setBreedList(dogBreeds);
+                      }
+                      if (p.key === "cat") {
+                        fetchCatBreeds();
+                        setBreedList(catBreeds);
+                      }
+                      setBreed("");
+                    }}
                   >
-                    {t.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Image
+                      source={type === p.key ? petIcons[p.key].active : petIcons[p.key].inactive}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        tintColor: type === p.key ? "#fff" : "#7B2CBF",
+                      }}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
             </ScrollView>
 
-            {/* BREED */}
-            <Text style={styles.label}>Breed</Text>
+            {/* RAZA */}
+            <Text style={styles.label}>Raza</Text>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => {
+                if (type === "dog" || type === "cat") {
+                  setBreedList(type === "dog" ? dogBreeds : catBreeds);
+                  setBreedModalVisible(true);
+                }
+              }}
+            >
+              <Text style={{ color: breed ? "#000" : "#777" }}>
+                {breed || "Seleccionar raza"}
+              </Text>
+            </TouchableOpacity>
+
+            {/* PESO */}
+            <Text style={styles.label}>Peso (kg)</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g. Golden Retriever"
-              value={breed}
-              onChangeText={setBreed}
-              placeholderTextColor="#9CA3AF"
+              value={weight}
+              onChangeText={(t) => setWeight(t.replace(/[^0-9.]/g, ""))}
+              keyboardType="decimal-pad"
             />
 
-            {/* SEX */}
-            <Text style={styles.label}>Sex *</Text>
+            {/* FECHA */}
+            <Text style={styles.label}>Fecha de Nacimiento</Text>
+            <TouchableOpacity onPress={() => setShowDatePicker(true)} activeOpacity={0.8}>
+              <View style={[styles.input, { justifyContent: "center" }]}>
+                <Text style={{ color: "#000" }}>{formatDate(birthday)}</Text>
+              </View>
+            </TouchableOpacity>
+
+            {showDatePicker && (
+              <Modal transparent animationType="fade">
+                <TouchableOpacity
+                  style={styles.pickerOverlay}
+                  activeOpacity={1}
+                  onPress={() => setShowDatePicker(false)}
+                >
+                  <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
+                    <DateTimePicker
+                      value={birthday}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={onDateChange}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </Modal>
+            )}
+
+            {/* SEXO */}
+            <Text style={styles.label}>Sexo</Text>
             <View style={styles.sexRow}>
-              {['Male', 'Female', 'Unknown'].map((s) => (
+              {["Male", "Female", "Unknown"].map((s) => (
                 <TouchableOpacity
                   key={s}
-                  style={[styles.sexButton, sex === s && styles.sexButtonActive]}
+                  style={[styles.sexBtn, sex === s && styles.sexBtnActive]}
                   onPress={() => setSex(s)}
                 >
-                  <Text
-                    style={[styles.sexText, sex === s && styles.sexTextActive]}
-                  >
-                    {s === 'Male' ? 'Macho' : s === 'Female' ? 'Hembra' : 'Desconocido'}
+                  <Text style={[styles.sexText, sex === s && { color: "#fff" }]}>
+                    {s === "Male" ? "Macho" : s === "Female" ? "Hembra" : "No lo sé"}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {/* BIRTHDAY */}
-            <Text style={styles.label}>Birthday *</Text>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={styles.dateText}>{formatDate(birthday)}</Text>
-              <Ionicons name="calendar-outline" size={24} color="#7B2CBF" />
+            {/* BOTÓN GUARDAR */}
+            <TouchableOpacity style={styles.createBtn} onPress={handleSave}>
+              <Text style={styles.createText}>Guardar Cambios</Text>
             </TouchableOpacity>
 
-            {showDatePicker && (
-              <DateTimePicker
-                value={birthday}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={onDateChange}
-                maximumDate={new Date()}
-                locale="es-ES"
-              />
-            )}
-
-            {/* SAVE BUTTON */}
-            <TouchableOpacity
-              style={[styles.saveButton, loading && styles.saveButtonDisabled]}
-              onPress={handleSave}
-              disabled={loading}
-            >
-              <Text style={styles.saveButtonText}>
-                {loading ? 'Guardando...' : 'Save Changes'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
+              <Text style={styles.cancelText}>Cancelar</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -281,171 +458,112 @@ export default function EditPetModal({
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
   modalContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '90%',
+    maxHeight: "90%",
   },
-
   modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: "#E5E7EB",
   },
-
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-
-  modalContent: {
-    padding: 20,
-  },
-
-  photoContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-
-  petPhoto: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: '#7B2CBF',
-  },
-
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-    marginTop: 16,
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#fff',
-  },
-
-  typeScroll: {
-    marginVertical: 8,
-  },
-
-  typeButton: {
-    width: 80,
-    height: 90,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#7B2CBF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    marginRight: 12,
-    gap: 4,
-  },
-
-  typeButtonActive: {
-    backgroundColor: '#7B2CBF',
-  },
-
-  typeLabel: {
-    fontSize: 11,
-    color: '#7B2CBF',
-    fontWeight: '600',
-  },
-
-  typeLabelActive: {
-    color: '#fff',
-  },
-
-  sexRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-
-  sexButton: {
+  modalTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },
+  modalContent: { padding: 25 },
+  pickerOverlay: {
     flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pickerContainer: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 16,
+    width: "85%",
+  },
+  label: { color: "#000", fontWeight: "600", marginBottom: 6, marginTop: 12 },
+  input: {
     borderWidth: 1.5,
-    borderColor: '#7B2CBF',
-    paddingVertical: 12,
+    borderColor: "#7B2CBF",
     borderRadius: 10,
-    alignItems: 'center',
-  },
-
-  sexButtonActive: {
-    backgroundColor: '#7B2CBF',
-  },
-
-  sexText: {
-    color: '#7B2CBF',
-    fontWeight: '600',
-  },
-
-  sexTextActive: {
-    color: '#fff',
-  },
-
-  dateButton: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  dateText: {
+    padding: 12,
     fontSize: 16,
-    color: '#111827',
   },
-
-  saveButton: {
-    backgroundColor: '#7B2CBF',
-    padding: 18,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 32,
+  uploadBtn: {
+    backgroundColor: "#7B2CBF",
+    borderRadius: 10,
+    padding: 12,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 10,
   },
-
-  saveButtonDisabled: {
-    opacity: 0.6,
+  uploadText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+  typeRow: { flexDirection: "row", marginTop: 10, gap: 12 },
+  typeBtn: {
+    width: 62,
+    height: 62,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#7B2CBF",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
-
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  typeBtnActive: { backgroundColor: "#7B2CBF", borderColor: "#7B2CBF" },
+  sexRow: { flexDirection: "row", gap: 12, marginTop: 10 },
+  sexBtn: {
+    borderWidth: 1.5,
+    borderColor: "#7B2CBF",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
   },
-
-  cancelButton: {
-    padding: 18,
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 20,
+  sexBtnActive: { backgroundColor: "#7B2CBF" },
+  sexText: { color: "#7B2CBF", fontWeight: "600" },
+  createBtn: {
+    backgroundColor: "#7B2CBF",
+    borderRadius: 10,
+    paddingVertical: 16,
+    marginTop: 30,
+    alignItems: "center",
   },
-
-  cancelButtonText: {
-    color: '#6B7280',
-    fontSize: 16,
-    fontWeight: '600',
+  createText: { color: "#fff", fontSize: 18, fontWeight: "700" },
+  cancelBtn: { padding: 16, alignItems: "center" },
+  cancelText: { color: "#6B7280", fontSize: 16, fontWeight: "600" },
+  photoWrapper: {
+    position: "relative",
+    width: 120,
+    height: 120,
+    marginTop: 10,
   },
+  petPhoto: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#7B2CBF",
+  },
+  cameraOverlay: {
+    position: "absolute",
+    bottom: 6,
+    right: 6,
+    backgroundColor: "#7B2CBF",
+    borderRadius: 18,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  
 });

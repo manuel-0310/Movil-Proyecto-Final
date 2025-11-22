@@ -14,6 +14,10 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/utils/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import EditVaccineModal from "@/components/EditVaccineModal";
+import EditMedicalRecordModal from "@/components/EditMedicalRecordModal";
+
+
 
 interface Pet {
   id: string;
@@ -31,6 +35,7 @@ interface Vaccine {
   name: string;
   date: string;
   notes?: string;
+  pet_id: string; 
 }
 
 interface MedicalRecord {
@@ -43,6 +48,12 @@ interface MedicalRecord {
 }
 
 export default function PetDetailScreen() {
+  const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
+  const [showEditRecordModal, setShowEditRecordModal] = useState(false);
+
+  const [selectedVaccine, setSelectedVaccine] = useState<Vaccine | null>(null);
+  const [showEditVaccineModal, setShowEditVaccineModal] = useState(false);
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const [pet, setPet] = useState<Pet | null>(null);
   const [vaccines, setVaccines] = useState<Vaccine[]>([]);
@@ -124,7 +135,7 @@ export default function PetDetailScreen() {
     const today = new Date();
     const diffTime = Math.abs(today.getTime() - birthDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     const years = Math.floor(diffDays / 365);
     const months = Math.floor((diffDays % 365) / 30);
 
@@ -251,27 +262,30 @@ export default function PetDetailScreen() {
             </TouchableOpacity>
           </View>
 
-          {vaccines.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="medical-outline" size={40} color="#D1D5DB" />
-              <Text style={styles.emptyText}>No hay vacunas registradas</Text>
-            </View>
-          ) : (
-            vaccines.map((vaccine) => (
-              <View key={vaccine.id} style={styles.listItem}>
-                <View style={styles.listIcon}>
-                  <Ionicons name="medical" size={24} color="#7B2CBF" />
-                </View>
-                <View style={styles.listContent}>
-                  <Text style={styles.listTitle}>{vaccine.name}</Text>
-                  {vaccine.notes && (
-                    <Text style={styles.listSubtitle}>{vaccine.notes}</Text>
-                  )}
-                </View>
-                <Text style={styles.listDate}>{formatDate(vaccine.date)}</Text>
+          {vaccines.map((vaccine) => (
+            <TouchableOpacity
+              key={vaccine.id}
+              style={styles.listItem}
+              onPress={() => {
+                setSelectedVaccine(vaccine);
+                setShowEditVaccineModal(true);
+              }}
+            >
+              <View style={styles.listIcon}>
+                <Ionicons name="medical" size={24} color="#7B2CBF" />
               </View>
-            ))
-          )}
+              <View style={styles.listContent}>
+                <Text style={styles.listTitle}>{vaccine.name}</Text>
+                {vaccine.notes && (
+                  <Text style={styles.listSubtitle} numberOfLines={1}>
+                    {vaccine.notes}
+                  </Text>
+                )}
+              </View>
+              <Text style={styles.listDate}>{formatDate(vaccine.date)}</Text>
+            </TouchableOpacity>
+          ))}
+
         </View>
 
         {/* MEDICAL HISTORY SECTION */}
@@ -285,34 +299,54 @@ export default function PetDetailScreen() {
             </TouchableOpacity>
           </View>
 
-          {medicalRecords.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="document-text-outline" size={40} color="#D1D5DB" />
-              <Text style={styles.emptyText}>No hay registros médicos</Text>
-            </View>
-          ) : (
-            medicalRecords.map((record) => (
-              <View key={record.id} style={styles.listItem}>
-                <View style={styles.listIcon}>
-                  <Ionicons name="add-circle" size={24} color="#7B2CBF" />
-                </View>
-                <View style={styles.listContent}>
-                  <Text style={styles.listTitle}>{record.title}</Text>
-                  {record.description && (
-                    <Text style={styles.listSubtitle} numberOfLines={1}>
-                      {record.description}
-                    </Text>
-                  )}
-                </View>
-                <Text style={styles.listDate}>{formatDate(record.date)}</Text>
-              </View>
-            ))
-          )}
+          {medicalRecords.map((record) => (
+  <TouchableOpacity
+    key={record.id}
+    style={styles.listItem}
+    onPress={() => {
+      setSelectedRecord(record);
+      setShowEditRecordModal(true);
+    }}
+  >
+    <View style={styles.listIcon}>
+      <Ionicons name="add-circle" size={24} color="#7B2CBF" />
+    </View>
+    <View style={styles.listContent}>
+      <Text style={styles.listTitle}>{record.title}</Text>
+      {record.description && (
+        <Text style={styles.listSubtitle} numberOfLines={1}>
+          {record.description}
+        </Text>
+      )}
+    </View>
+    <Text style={styles.listDate}>{formatDate(record.date)}</Text>
+  </TouchableOpacity>
+))}
+
         </View>
+
+        {selectedVaccine && (
+          <EditVaccineModal
+            visible={showEditVaccineModal}
+            vaccine={selectedVaccine}
+            onClose={() => setShowEditVaccineModal(false)}
+            onSave={loadPetData}
+          />
+        )}
+        {selectedRecord && (
+  <EditMedicalRecordModal
+    visible={showEditRecordModal}
+    record={selectedRecord}
+    onClose={() => setShowEditRecordModal(false)}
+    onSave={loadPetData}
+  />
+)}
+
 
         <View style={{ height: 40 }} />
       </ScrollView>
     </Animated.View>
+
   );
 }
 

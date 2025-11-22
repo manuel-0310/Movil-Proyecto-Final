@@ -181,7 +181,7 @@ export default function ProfileScreen() {
 
       // Subir imagen al bucket "profile_pic"
       const { error: uploadError } = await supabase.storage
-        .from("profile_pic")
+        .from("profile-photos")
         .upload(fileName, bytes, {
           contentType: "image/jpeg",
           upsert: true,
@@ -191,7 +191,7 @@ export default function ProfileScreen() {
 
       // Obtener URL pública
       const { data } = supabase.storage
-        .from("profile_pic")
+        .from("profile-photos")
         .getPublicUrl(fileName);
       const publicUrl = data.publicUrl;
 
@@ -283,7 +283,7 @@ export default function ProfileScreen() {
           <View style={styles.infoCard}>
             <View style={styles.infoItem}>
               <View style={styles.infoIconContainer}>
-                <Ionicons name="call" size={20} color="#7B2CBF" />
+                <Ionicons name="call" size={20} color="#7B2FF7" />
               </View>
               <View style={styles.infoTextContainer}>
                 <Text style={styles.infoLabel}>Phone number</Text>
@@ -293,7 +293,7 @@ export default function ProfileScreen() {
 
             <View style={styles.infoItem}>
               <View style={styles.infoIconContainer}>
-                <Ionicons name="location" size={20} color="#7B2CBF" />
+                <Ionicons name="location" size={20} color="#7B2FF7" />
               </View>
               <View style={styles.infoTextContainer}>
                 <Text style={styles.infoLabel}>Address</Text>
@@ -303,7 +303,7 @@ export default function ProfileScreen() {
 
             <View style={styles.infoItem}>
               <View style={styles.infoIconContainer}>
-                <Ionicons name="business" size={20} color="#7B2CBF" />
+                <Ionicons name="business" size={20} color="#7B2FF7" />
               </View>
               <View style={styles.infoTextContainer}>
                 <Text style={styles.infoLabel}>City</Text>
@@ -340,7 +340,6 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 key={pet.id}
                 style={styles.petItem}
-                onPress={() => handleEditPet(pet)}
               >
                 <View style={styles.petIconContainer}>
                   {pet.photo_url ? (
@@ -358,9 +357,9 @@ export default function ProfileScreen() {
                 </View>
 
                 <TouchableOpacity
-                  onPress={() => router.push(`/pet-detail/${pet.id}`)}
+                   onPress={() => handleEditPet(pet)}
                 >
-                  <Text style={styles.viewProfileText}>View profile</Text>
+                  <Text style={styles.viewProfileText}>Editar mascota</Text>
                 </TouchableOpacity>
               </TouchableOpacity>
             ))
@@ -423,7 +422,7 @@ const styles = StyleSheet.create({
 
   /* HEADER */
   header: {
-    backgroundColor: '#7B2CBF',
+    backgroundColor: '#7B2FF7',
     paddingTop: 60,
     paddingBottom: 40,
     alignItems: 'center',
@@ -456,7 +455,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 4,
     borderColor: '#fff',
-    backgroundColor: '#F3E8FF',
+    backgroundColor: '#7B2FF7',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -465,7 +464,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#7B2CBF',
+    backgroundColor: '#7B2FF7',
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -548,7 +547,7 @@ const styles = StyleSheet.create({
 
   editButtonText: {
     fontSize: 14,
-    color: '#7B2CBF',
+    color: '#7B2FF7',
     fontWeight: '600',
   },
 

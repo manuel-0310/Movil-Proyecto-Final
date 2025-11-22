@@ -36,19 +36,18 @@ export default function ChatsScreen() {
     }, [user])
   );
 
-  const loadChats = async () => {
+  const loadChats = async (showLoading = true) => {
     try {
-      if (!refreshing) setLoading(true);
-
+      if (showLoading && !refreshing) setLoading(true);
+  
       const { data: chatsData, error: chatsError } = await supabase
         .from('chats')
         .select('*')
         .eq('user_id', user?.id)
         .order('updated_at', { ascending: false });
-
+  
       if (chatsError) throw chatsError;
-
-      // Obtener último mensaje
+  
       const chatsWithMessages = await Promise.all(
         (chatsData || []).map(async (chat) => {
           const { data: messages } = await supabase
@@ -57,7 +56,7 @@ export default function ChatsScreen() {
             .eq('chat_id', chat.id)
             .order('created_at', { ascending: false })
             .limit(1);
-
+  
           return {
             ...chat,
             lastMessage: messages?.[0]?.content || 'Sin mensajes',
@@ -65,17 +64,17 @@ export default function ChatsScreen() {
           };
         })
       );
-
+  
       setChats(chatsWithMessages);
     } catch (error) {
       console.error('Error al cargar chats:', error);
       Alert.alert('Error', 'No se pudieron cargar los chats');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false); // 👈 solo muestra loading si lo pedimos
       setRefreshing(false);
     }
   };
-
+  
   const onRefresh = async () => {
     setRefreshing(true);
     await loadChats();
@@ -97,10 +96,10 @@ export default function ChatsScreen() {
       if (error) throw error;
   
       if (data) {
-        // Agregar el chat al estado SIN activar loading
+        // Actualizar lista sin activar loading
         setChats((prev) => [data, ...prev]);
   
-        // Ir directo al chat
+        // Navegar directamente al chat sin refrescar la lista
         router.push(`/chats/${data.id}`);
       }
     } catch (error) {
@@ -119,7 +118,6 @@ export default function ChatsScreen() {
       if (error) throw error;
 
       setChats(chats.filter((chat) => chat.id !== chatId));
-      Alert.alert('Eliminado', 'Chat eliminado correctamente');
     } catch (error) {
       console.error('Error al eliminar chat:', error);
       Alert.alert('Error', 'No se pudo eliminar el chat');
