@@ -11,11 +11,15 @@ import {
   ActivityIndicator,
   Dimensions,
   Alert,
+  Animated,
 } from 'react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import EditVaccineModal from "@/components/EditVaccineModal";
+import EditMedicalRecordModal from "@/components/EditMedicalRecordModal";
+import EditPetModal from "@/components/EditPetModal";
 
 const { width } = Dimensions.get('window');
 
@@ -26,12 +30,30 @@ interface Pet {
   breed: string;
   sex: string;
   birthday: string;
-  weight: string;
+  weight: number;
   photo_url?: string;
+  user_id?: string;
 }
 
 interface UserProfile {
   name: string;
+}
+
+interface Vaccine {
+  id: string;
+  name: string;
+  date: string;
+  notes?: string;
+  pet_id: string;
+}
+
+interface MedicalRecord {
+  id: string;
+  title: string;
+  date: string;
+  description?: string;
+  vet_name?: string;
+  notes?: string;
 }
 
 export default function HomeScreen() {
@@ -39,10 +61,19 @@ export default function HomeScreen() {
   const [userName, setUserName] = useState('');
   const [pets, setPets] = useState<Pet[]>([]);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+  const [vaccines, setVaccines] = useState<Vaccine[]>([]);
+  const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const carouselRef = useRef(null);
+  const [selectedVaccine, setSelectedVaccine] = useState<Vaccine | null>(null);
+  const [showEditVaccineModal, setShowEditVaccineModal] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
+  const [showEditRecordModal, setShowEditRecordModal] = useState(false);
+  const [showAllVaccines, setShowAllVaccines] = useState(false);
+  const [showAllRecords, setShowAllRecords] = useState(false);
+  const [showEditPetModal, setShowEditPetModal] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (user) {
@@ -50,6 +81,19 @@ export default function HomeScreen() {
       loadPets();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (selectedPet) {
+      loadPetDetails();
+      setShowAllVaccines(false);
+      setShowAllRecords(false);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [selectedPet]);
 
   const loadUserData = async () => {
     try {
@@ -90,6 +134,36 @@ export default function HomeScreen() {
     }
   };
 
+  const loadPetDetails = async () => {
+    if (!selectedPet) return;
+
+    try {
+      // Cargar todas las vacunas (sin límite)
+      const { data: vaccinesData, error: vaccinesError } = await supabase
+        .from('vaccines')
+        .select('*')
+        .eq('pet_id', selectedPet.id)
+        .order('date', { ascending: false });
+
+      if (!vaccinesError) {
+        setVaccines(vaccinesData || []);
+      }
+
+      // Cargar todo el historial médico (sin límite)
+      const { data: recordsData, error: recordsError } = await supabase
+        .from('medical_records')
+        .select('*')
+        .eq('pet_id', selectedPet.id)
+        .order('date', { ascending: false });
+
+      if (!recordsError) {
+        setMedicalRecords(recordsData || []);
+      }
+    } catch (error) {
+      console.error('Error loading pet details:', error);
+    }
+  };
+
   const calculateAge = (birthday: string) => {
     const birthDate = new Date(birthday);
     const today = new Date();
@@ -106,6 +180,15 @@ export default function HomeScreen() {
     } else {
       return `${years} ${years === 1 ? 'año' : 'años'} y ${months} ${months === 1 ? 'mes' : 'meses'}`;
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+    });
   };
 
   const sendQuickMessage = async () => {
@@ -152,25 +235,6 @@ export default function HomeScreen() {
     }
   };
 
-  const renderPetCard = ({ item }: { item: Pet }) => (
-    <TouchableOpacity
-      style={[
-        styles.petChip,
-        selectedPet?.id === item.id && styles.petChipSelected,
-      ]}
-      onPress={() => setSelectedPet(item)}
-    >
-      <Text
-        style={[
-          styles.petChipText,
-          selectedPet?.id === item.id && styles.petChipTextSelected,
-        ]}
-      >
-        {item.name}
-      </Text>
-    </TouchableOpacity>
-  );
-
   const getPetIcon = (type: string) => {
     const icons: { [key: string]: string } = {
       dog: 'paw',
@@ -184,6 +248,14 @@ export default function HomeScreen() {
     };
     return icons[type] || 'paw';
   };
+
+  // Determinar qué vacunas mostrar
+  const displayedVaccines = showAllVaccines ? vaccines : vaccines.slice(0, 5);
+  const hasMoreVaccines = vaccines.length > 5;
+
+  // Determinar qué registros mostrar
+  const displayedRecords = showAllRecords ? medicalRecords : medicalRecords.slice(0, 5);
+  const hasMoreRecords = medicalRecords.length > 5;
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -268,86 +340,222 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
 
-        {/* PET CARD */}
+        {/* PET DETAILED CARD */}
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#7B2CBF" />
           </View>
         ) : selectedPet ? (
-          // 🎯 TOUCHABLE OPACITY PARA NAVEGAR A DETALLE
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={() =>
-              router.push(`/pet-detail/${selectedPet.id}`)
-
-            }
-          >
-            <View style={styles.petCard}>
-              {/* PET PHOTO & NAME */}
-              <View style={styles.petHeader}>
-                <View style={styles.petPhotoContainer}>
+          <Animated.View style={{ opacity: fadeAnim }}>
+            {/* PET INFO CARD - NUEVA ESTRUCTURA */}
+            <View style={styles.petInfoCard}>
+              {/* HEADER CON FOTO Y NOMBRE */}
+              <View style={styles.petCardHeader}>
+                <View style={styles.petPhotoSection}>
                   {selectedPet.photo_url ? (
-                    <Image
-                      source={{ uri: selectedPet.photo_url }}
-                      style={styles.petPhoto}
-                    />
+                    <Image source={{ uri: selectedPet.photo_url }} style={styles.petPhoto} />
                   ) : (
                     <View style={styles.petPhotoPlaceholder}>
-                      <Ionicons
-                        name={getPetIcon(selectedPet.type) as any}
-                        size={40}
-                        color="#7B2CBF"
-                      />
+                      <Ionicons name={getPetIcon(selectedPet.type) as any} size={50} color="#7B2CBF" />
                     </View>
                   )}
                 </View>
 
-                <View style={styles.petInfo}>
-                  <Text style={styles.petName}>{selectedPet.name}</Text>
-                  <Text style={styles.petBreed}>{selectedPet.breed || 'Sin raza'}</Text>
-                </View>
-              </View>
-
-              {/* PET DETAILS */}
-              <View style={styles.petDetails}>
-                <View style={styles.detailRow}>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Age</Text>
-                    <Text style={styles.detailValue}>
-                      {calculateAge(selectedPet.birthday)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Sex</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedPet.sex === 'Male' ? 'Male' : selectedPet.sex === 'Female' ? 'Female' : 'Unknown'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Weight</Text>
-                    <Text style={styles.detailValue}>{selectedPet.weight} kg</Text>
-                  </View>
-
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Owner</Text>
-                    <Text style={styles.detailValue} numberOfLines={1}>
-                      {userName}
-                    </Text>
+                <View style={styles.petHeaderInfo}>
+                  <View style={styles.petNameRow}>
+                    <View style={styles.petNameContainer}>
+                      <Text style={styles.petName}>{selectedPet.name}</Text>
+                      <Text style={styles.petBreed}>{selectedPet.breed || 'Sin raza'}</Text>
+                    </View>
+                    <TouchableOpacity 
+                      style={styles.editButton}
+                      onPress={() => setShowEditPetModal(true)}
+                    >
+                      <Ionicons name="create-outline" size={22} color="#7B2CBF" />
+                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
 
-              {/* 🆕 INDICADOR DE TAP */}
-              <View style={styles.tapToExpandHint}>
-                <Ionicons name="expand-outline" size={16} color="#9CA3AF" />
-                <Text style={styles.tapToExpandText}>Tap para ver detalles</Text>
+              {/* DIVIDER */}
+              <View style={styles.divider} />
+
+              {/* BASIC INFO GRID */}
+              <View style={styles.basicInfo}>
+                <View style={styles.infoRow}>
+                  <View style={styles.infoItem}>
+                    <View style={styles.infoIconContainer}>
+                      <Ionicons name="calendar-outline" size={18} color="#7B2CBF" />
+                    </View>
+                    <View>
+                      <Text style={styles.infoLabel}>Age</Text>
+                      <Text style={styles.infoValue}>{calculateAge(selectedPet.birthday)}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.infoItem}>
+                    <View style={styles.infoIconContainer}>
+                      <Ionicons name={selectedPet.sex === 'Male' ? 'male' : 'female'} size={18} color="#7B2CBF" />
+                    </View>
+                    <View>
+                      <Text style={styles.infoLabel}>Sex</Text>
+                      <Text style={styles.infoValue}>
+                        {selectedPet.sex === 'Male' ? 'Male' : selectedPet.sex === 'Female' ? 'Female' : 'Unknown'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <View style={styles.infoItem}>
+                    <View style={styles.infoIconContainer}>
+                      <Ionicons name="scale-outline" size={18} color="#7B2CBF" />
+                    </View>
+                    <View>
+                      <Text style={styles.infoLabel}>Weight</Text>
+                      <Text style={styles.infoValue}>{selectedPet.weight} kg</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.infoItem}>
+                    <View style={styles.infoIconContainer}>
+                      <Ionicons name="person-outline" size={18} color="#7B2CBF" />
+                    </View>
+                    <View>
+                      <Text style={styles.infoLabel}>Owner</Text>
+                      <Text style={styles.infoValue} numberOfLines={1}>
+                        {userName}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
               </View>
             </View>
-          </TouchableOpacity>
+
+            {/* VACCINES SECTION */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Vaccines</Text>
+                <TouchableOpacity
+                  onPress={() => router.push({ pathname: '/add-vaccine', params: { petId: selectedPet.id } })}
+                >
+                  <Text style={styles.addButton}>Add New Vaccine</Text>
+                </TouchableOpacity>
+              </View>
+
+              {vaccines.length > 0 ? (
+                <>
+                  {displayedVaccines.map((vaccine) => (
+                    <TouchableOpacity
+                      key={vaccine.id}
+                      style={styles.listItem}
+                      onPress={() => {
+                        setSelectedVaccine(vaccine);
+                        setShowEditVaccineModal(true);
+                      }}
+                    >
+                      <View style={styles.listIcon}>
+                        <Ionicons name="medical" size={24} color="#7B2CBF" />
+                      </View>
+                      <View style={styles.listContent}>
+                        <Text style={styles.listTitle}>{vaccine.name}</Text>
+                        {vaccine.notes && (
+                          <Text style={styles.listSubtitle} numberOfLines={1}>
+                            {vaccine.notes}
+                          </Text>
+                        )}
+                      </View>
+                      <Text style={styles.listDate}>{formatDate(vaccine.date)}</Text>
+                    </TouchableOpacity>
+                  ))}
+                  
+                  {/* BOTÓN VER MÁS / VER MENOS */}
+                  {hasMoreVaccines && (
+                    <TouchableOpacity
+                      style={styles.viewMoreButton}
+                      onPress={() => setShowAllVaccines(!showAllVaccines)}
+                    >
+                      <Text style={styles.viewMoreText}>
+                        {showAllVaccines ? 'Ver menos' : `Ver más (${vaccines.length - 5} más)`}
+                      </Text>
+                      <Ionicons 
+                        name={showAllVaccines ? 'chevron-up' : 'chevron-down'} 
+                        size={18} 
+                        color="#7B2CBF" 
+                      />
+                    </TouchableOpacity>
+                  )}
+                </>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Ionicons name="medical-outline" size={48} color="#D1D5DB" />
+                  <Text style={styles.emptyText}>No hay vacunas registradas</Text>
+                </View>
+              )}
+            </View>
+
+            {/* MEDICAL HISTORY SECTION */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Medical History</Text>
+                <TouchableOpacity
+                  onPress={() => router.push({ pathname: '/add-medical-record', params: { petId: selectedPet.id } })}
+                >
+                  <Text style={styles.addButton}>Add New</Text>
+                </TouchableOpacity>
+              </View>
+
+              {medicalRecords.length > 0 ? (
+                <>
+                  {displayedRecords.map((record) => (
+                    <TouchableOpacity
+                      key={record.id}
+                      style={styles.listItem}
+                      onPress={() => {
+                        setSelectedRecord(record);
+                        setShowEditRecordModal(true);
+                      }}
+                    >
+                      <View style={styles.listIcon}>
+                        <Ionicons name="add-circle" size={24} color="#7B2CBF" />
+                      </View>
+                      <View style={styles.listContent}>
+                        <Text style={styles.listTitle}>{record.title}</Text>
+                        {record.description && (
+                          <Text style={styles.listSubtitle} numberOfLines={1}>
+                            {record.description}
+                          </Text>
+                        )}
+                      </View>
+                      <Text style={styles.listDate}>{formatDate(record.date)}</Text>
+                    </TouchableOpacity>
+                  ))}
+                  
+                  {/* BOTÓN VER MÁS / VER MENOS */}
+                  {hasMoreRecords && (
+                    <TouchableOpacity
+                      style={styles.viewMoreButton}
+                      onPress={() => setShowAllRecords(!showAllRecords)}
+                    >
+                      <Text style={styles.viewMoreText}>
+                        {showAllRecords ? 'Ver menos' : `Ver más (${medicalRecords.length - 5} más)`}
+                      </Text>
+                      <Ionicons 
+                        name={showAllRecords ? 'chevron-up' : 'chevron-down'} 
+                        size={18} 
+                        color="#7B2CBF" 
+                      />
+                    </TouchableOpacity>
+                  )}
+                </>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Ionicons name="document-text-outline" size={48} color="#D1D5DB" />
+                  <Text style={styles.emptyText}>No hay historial médico</Text>
+                </View>
+              )}
+            </View>
+          </Animated.View>
         ) : (
           <View style={styles.noPetsContainer}>
             <Ionicons name="paw-outline" size={80} color="#D1D5DB" />
@@ -358,6 +566,43 @@ export default function HomeScreen() {
           </View>
         )}
       </View>
+
+      {/* MODALS */}
+      {selectedVaccine && (
+        <EditVaccineModal
+          visible={showEditVaccineModal}
+          vaccine={selectedVaccine}
+          onClose={() => setShowEditVaccineModal(false)}
+          onSave={loadPetDetails}
+        />
+      )}
+      {selectedRecord && (
+        <EditMedicalRecordModal
+          visible={showEditRecordModal}
+          record={selectedRecord}
+          onClose={() => setShowEditRecordModal(false)}
+          onSave={loadPetDetails}
+        />
+      )}
+      {selectedPet && (
+        <EditPetModal
+          visible={showEditPetModal}
+          pet={{
+            id: selectedPet.id,
+            name: selectedPet.name,
+            type: selectedPet.type,
+            breed: selectedPet.breed,
+            sex: selectedPet.sex,
+            birthday: selectedPet.birthday,
+            weight: selectedPet.weight,
+            photo_url: selectedPet.photo_url,
+          }}
+          onClose={() => setShowEditPetModal(false)}
+          onSave={loadPets}
+        />
+      )}
+
+      <View style={{ height: 40 }} />
     </ScrollView>
   );
 }
@@ -495,48 +740,60 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
 
-  /* PET CARD */
-  petCard: {
+  /* PET INFO CARD - NUEVA ESTRUCTURA */
+  petInfoCard: {
     backgroundColor: '#fff',
     borderRadius: 20,
-    padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+    marginBottom: 20,
+    overflow: 'hidden',
   },
 
-  petHeader: {
+  petCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 25,
+    padding: 20,
+    paddingBottom: 16,
   },
 
-  petPhotoContainer: {
-    marginRight: 15,
+  petPhotoSection: {
+    marginRight: 16,
   },
 
   petPhoto: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 3,
-    borderColor: '#7B2FF7',
-  },
-
-  petPhotoPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     borderWidth: 3,
     borderColor: '#7B2CBF',
   },
 
-  petInfo: {
+  petPhotoPlaceholder: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 3,
+    borderColor: '#7B2CBF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  petHeaderInfo: {
+    flex: 1,
+  },
+
+  petNameRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+
+  petNameContainer: {
     flex: 1,
   },
 
@@ -548,53 +805,164 @@ const styles = StyleSheet.create({
   },
 
   petBreed: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#6B7280',
   },
 
-  /* PET DETAILS */
-  petDetails: {
-    gap: 15,
+  editButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F3E8FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
   },
 
-  detailRow: {
+  divider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 20,
+  },
+
+  basicInfo: {
+    padding: 20,
+    paddingTop: 16,
+    gap: 12,
+  },
+
+  infoRow: {
     flexDirection: 'row',
-    gap: 15,
+    gap: 12,
   },
 
-  detailItem: {
+  infoItem: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    padding: 14,
+    borderRadius: 12,
+    gap: 12,
   },
 
-  detailLabel: {
-    fontSize: 14,
+  infoIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F3E8FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  infoLabel: {
+    fontSize: 12,
     color: '#6B7280',
-    marginBottom: 4,
+    marginBottom: 2,
     fontWeight: '500',
   },
 
-  detailValue: {
-    fontSize: 16,
+  infoValue: {
+    fontSize: 15,
+    fontWeight: '600',
     color: '#111827',
+  },
+
+  /* SECTIONS */
+  section: {
+    paddingVertical: 16,
+  },
+
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+
+  addButton: {
+    fontSize: 14,
+    color: '#7B2CBF',
     fontWeight: '600',
   },
 
-  /* 🆕 TAP TO EXPAND HINT */
-  tapToExpandHint: {
+  /* LIST ITEMS */
+  listItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-    gap: 6,
+    backgroundColor: '#F9FAFB',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
   },
 
-  tapToExpandText: {
+  listIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F3E8FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+
+  listContent: {
+    flex: 1,
+  },
+
+  listTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+
+  listSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+
+  listDate: {
     fontSize: 12,
     color: '#9CA3AF',
     fontWeight: '500',
+  },
+
+  /* VER MÁS / VER MENOS BUTTON */
+  viewMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginTop: 4,
+    gap: 6,
+  },
+
+  viewMoreText: {
+    fontSize: 14,
+    color: '#7B2CBF',
+    fontWeight: '600',
+  },
+
+  /* EMPTY STATE */
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+
+  emptyText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginTop: 8,
   },
 
   /* NO PETS */
@@ -616,12 +984,6 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     marginBottom: 25,
-  },
-
-  addFirstPetButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
 
   /* LOADING */
