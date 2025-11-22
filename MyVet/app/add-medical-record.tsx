@@ -40,19 +40,12 @@ export default function AddMedicalRecordForm() {
           title: title.trim(),
           date: date.toISOString().split('T')[0],
           description: description.trim() || null,
-          vet_name: vetName.trim() || null,
-          notes: notes.trim() || null,
         },
       ]);
 
       if (error) throw error;
+      router.back()
 
-      Alert.alert('¡Éxito!', 'Registro médico guardado correctamente', [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
-        },
-      ]);
     } catch (error: any) {
       console.error('Error saving medical record:', error);
       Alert.alert('Error', 'No se pudo guardar el registro médico');
@@ -131,36 +124,6 @@ export default function AddMedicalRecordForm() {
           placeholderTextColor="#9CA3AF"
         />
 
-        {/* VET NAME */}
-        <Text style={styles.label}>Nombre del Veterinario</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="ej. Dr. García, Dra. Martínez"
-          value={vetName}
-          onChangeText={setVetName}
-          placeholderTextColor="#9CA3AF"
-        />
-
-        {/* NOTES */}
-        <Text style={styles.label}>Notas Adicionales</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Medicamentos, recomendaciones, próximas citas..."
-          value={notes}
-          onChangeText={setNotes}
-          multiline
-          numberOfLines={4}
-          placeholderTextColor="#9CA3AF"
-        />
-
-        {/* INFO BOX */}
-        <View style={styles.infoBox}>
-          <Ionicons name="information-circle" size={20} color="#7B2CBF" />
-          <Text style={styles.infoText}>
-            Mantén un registro completo del historial médico de tu mascota para
-            consultas futuras y mejores diagnósticos.
-          </Text>
-        </View>
 
         {/* SAVE BUTTON */}
         <TouchableOpacity

@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
 
   /* LISTA */
   listContainer: {
-    paddingTop: 20,
+    paddingTop: 10,
     paddingBottom: 100,
   },
 

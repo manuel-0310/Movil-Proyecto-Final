@@ -457,7 +457,15 @@ export default function ChatConversationScreen() {
             )}
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
+        
+     
+        
+        </KeyboardAvoidingView>
+        
+        <View style = {{ alignItems: "center", backgroundColor:"#FFFFFF"}}>
+        <Text style = {{fontSize: 12, color: "#888",paddingBottom:20, position:"fixed", alignItems: "center", textAlign:"center", maxWidth:300, justifyContent:"center"}}>Chat impulsado por IA. No sustituye la atención veterinaria profesional.</Text>
+        </View>
+         
     </>
   );
 }
@@ -497,7 +505,7 @@ const styles = StyleSheet.create({
 
   /* MENSAJES */
   messagesList: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
     paddingBottom: 20,
   },
 
@@ -523,24 +531,24 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 8,
+    marginHorizontal:5,
   },
 
   messageBubble: {
-    maxWidth: "75%",
-    borderRadius: 18,
-    paddingHorizontal: 16,
+    maxWidth: "70%",
+    borderRadius: 12,
+    paddingHorizontal: 15,
     paddingVertical: 10,
   },
 
   userBubble: {
     backgroundColor: "#A56BFF",
-    borderBottomRightRadius: 6,
+    borderBottomRightRadius: 3,
   },
 
   assistantBubble: {
     backgroundColor: "#F2F1F7",
-    borderBottomLeftRadius: 6,
+    borderBottomLeftRadius: 3,
   },
 
   messageText: {
@@ -572,7 +580,7 @@ const styles = StyleSheet.create({
 
   /* EMPTY STATE */
   emptyContainer: {
-    minHeight: height * 0.6,
+    minHeight: height * 0.65,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 20,

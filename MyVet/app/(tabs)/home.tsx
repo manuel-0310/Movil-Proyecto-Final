@@ -205,7 +205,7 @@ export default function HomeScreen() {
         <View style={styles.quickMessageContainer}>
           <TextInput
             style={styles.quickMessageInput}
-            placeholder="your message here..."
+            placeholder="escribe tu mensaje..."
             placeholderTextColor="rgba(255,255,255,0.6)"
             value={message}
             onChangeText={setMessage}
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
 
   /* HEADER */
   header: {
-    backgroundColor: '#7B2CBF',
+    backgroundColor: '#7B2FF7',
     paddingTop: 60,
     paddingBottom: 30,
     paddingHorizontal: 25,
@@ -462,18 +462,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#7B2CBF',
+    borderColor: '#7B2FF7',
     backgroundColor: '#fff',
   },
 
   petChipSelected: {
-    backgroundColor: '#7B2CBF',
+    backgroundColor: '#7B2FF7',
   },
 
   petChipText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#7B2CBF',
+    color: '#7B2FF7',
   },
 
   petChipTextSelected: {
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     borderWidth: 3,
-    borderColor: '#7B2CBF',
+    borderColor: '#7B2FF7',
   },
 
   petPhotoPlaceholder: {

@@ -18,6 +18,7 @@ Directrices:
 - Si detectas una emergencia, recomienda acudir inmediatamente a un veterinario
 - Puedes dar consejos generales sobre cuidados, alimentación, comportamiento, etc.
 - Escribe en español de manera clara y accesible
+- no mandes mensajes usando # en markdown para los titulos 
 - En caso de recibir una peticion que no esté relacionada con veterinaria aclararle al usuario que no puedes responder eso
 
 Responde de forma concisa pero completa.`;
