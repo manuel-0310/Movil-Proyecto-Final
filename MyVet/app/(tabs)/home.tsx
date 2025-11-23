@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import EditVaccineModal from "@/components/EditVaccineModal";
 import EditMedicalRecordModal from "@/components/EditMedicalRecordModal";
 import EditPetModal from "@/components/EditPetModal";
+import QRModal from "@/components/qrmodal";
 
 const { width } = Dimensions.get('window');
 
@@ -73,6 +74,7 @@ export default function HomeScreen() {
   const [showAllVaccines, setShowAllVaccines] = useState(false);
   const [showAllRecords, setShowAllRecords] = useState(false);
   const [showEditPetModal, setShowEditPetModal] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -271,6 +273,12 @@ export default function HomeScreen() {
           <View style={styles.logoContainer}>
             <Ionicons name="paw" size={40} color="#fff" />
           </View>
+          <TouchableOpacity 
+            style={styles.qrButton}
+            onPress={() => setShowQRModal(true)}
+          >
+            <Ionicons name="qr-code" size={24} color="#fff" />
+          </TouchableOpacity>
         </View>
 
         {/* QUICK MESSAGE INPUT */}
@@ -602,6 +610,8 @@ export default function HomeScreen() {
         />
       )}
 
+      <QRModal visible={showQRModal} onClose={() => setShowQRModal(false)} />
+
       <View style={{ height: 40 }} />
     </ScrollView>
   );
@@ -634,6 +644,15 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  qrButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
