@@ -102,7 +102,7 @@ export default function StoreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F9FAFB',
   },
 
   contentContainer: {
@@ -115,17 +115,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 60,
+    backgroundColor: '#F9FAFB',
   },
 
   /* PRODUCTS */
   productCard: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    borderRadius: 24,
+    borderRadius: 20,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
     overflow: 'hidden',
@@ -134,8 +135,9 @@ const styles = StyleSheet.create({
   productImage: {
     width: 112,
     height: 112,
-    borderRadius: 20,
+    borderRadius: 16,
     margin: 12,
+    backgroundColor: '#F3F4F6',
   },
 
   productInfo: {

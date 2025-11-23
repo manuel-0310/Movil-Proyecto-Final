@@ -1,5 +1,5 @@
 // app/(tabs)/market/map.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,16 +10,18 @@ import {
   ActivityIndicator,
   Linking,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Region } from 'react-native-maps';
+import * as Location from 'expo-location';
 import { supabase } from '@/utils/supabase';
 
 interface Store {
   id: string;
   name: string;
   address: string;
-  distance?: string;
+  distance?: number;
   latitude: number;
   longitude: number;
   phone?: string;
@@ -29,17 +31,89 @@ interface Store {
   type: string;
 }
 
+// Función para calcular distancia en km usando fórmula Haversine
+const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number => {
+  const R = 6371; // Radio de la Tierra en km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
 export default function MapScreen() {
   const [stores, setStores] = useState<Store[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [locationPermission, setLocationPermission] = useState(false);
+  const mapRef = useRef<MapView>(null);
 
   const filters = ['Open 24h', 'Nearest', 'Veterinary', 'Pet Store'];
 
   useEffect(() => {
+    requestLocationPermission();
     loadStores();
   }, [activeFilters]);
+  
+  useEffect(() => {
+    if (userLocation && stores.length > 0) {
+      calculateDistances();
+    }
+  }, [userLocation]);
+  
+
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status === 'granted') {
+        setLocationPermission(true);
+        const location = await Location.getCurrentPositionAsync({});
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      } else {
+        Alert.alert(
+          'Permisos de ubicación',
+          'Se necesitan permisos de ubicación para mostrarte las tiendas cercanas'
+        );
+      }
+    } catch (error) {
+      console.error('Error requesting location permission:', error);
+    }
+  };
+
+  const calculateDistances = () => {
+    if (!userLocation) return;
+
+    const storesWithDistance = stores.map((store) => ({
+      ...store,
+      distance: calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        store.latitude,
+        store.longitude
+      ),
+    }));
+
+    setStores(storesWithDistance);
+  };
 
   const loadStores = async () => {
     try {
@@ -81,6 +155,25 @@ export default function MapScreen() {
     );
   };
 
+  const centerOnUserLocation = async () => {
+    if (!locationPermission) {
+      await requestLocationPermission();
+      return;
+    }
+
+    if (userLocation && mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02,
+        },
+        1000
+      );
+    }
+  };
+
   const handleCall = (phone?: string) => {
     if (phone) {
       Linking.openURL(`tel:${phone}`);
@@ -94,11 +187,20 @@ export default function MapScreen() {
     Linking.openURL(url);
   };
 
-  const filteredStores = stores.filter(
+  let filteredStores = stores.filter(
     (store) =>
       store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       store.address.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Ordenar por distancia si está el filtro "Nearest"
+  if (activeFilters.includes('Nearest') && userLocation) {
+    filteredStores = [...filteredStores].sort((a, b) => {
+      const distA = a.distance || Infinity;
+      const distB = b.distance || Infinity;
+      return distA - distB;
+    });
+  }
 
   if (loading) {
     return (
@@ -117,13 +219,16 @@ export default function MapScreen() {
       {/* MAP */}
       <View style={styles.mapContainer}>
         <MapView
+          ref={mapRef}
           style={styles.map}
           initialRegion={{
-            latitude: 4.6560,
-            longitude: -74.0595,
+            latitude: userLocation?.latitude || 4.6560,
+            longitude: userLocation?.longitude || -74.0595,
             latitudeDelta: 0.05,
             longitudeDelta: 0.05,
           }}
+          showsUserLocation={locationPermission}
+          showsMyLocationButton={false}
         >
           {filteredStores.map((store) => (
             <Marker
@@ -138,6 +243,14 @@ export default function MapScreen() {
             />
           ))}
         </MapView>
+
+        {/* BOTÓN CENTRAR UBICACIÓN */}
+        <TouchableOpacity
+          style={styles.centerButton}
+          onPress={centerOnUserLocation}
+        >
+          <Ionicons name="locate" size={24} color="#7B2CBF" />
+        </TouchableOpacity>
       </View>
 
       {/* SEARCH BAR */}
@@ -192,7 +305,7 @@ export default function MapScreen() {
               <Text style={styles.storeName}>{store.name}</Text>
               <Text style={styles.storeAddress}>
                 {store.address}
-                {store.distance && ` - ${store.distance}`}
+                {store.distance && ` - ${store.distance.toFixed(1)} km`}
               </Text>
               {store.rating && (
                 <View style={styles.ratingContainer}>
@@ -235,7 +348,7 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F9FAFB',
   },
 
   contentContainer: {
@@ -247,6 +360,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 60,
+    backgroundColor: '#F9FAFB',
   },
 
   /* MAP */
@@ -261,11 +375,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+    position: 'relative',
   },
 
   map: {
     width: '100%',
     height: '100%',
+  },
+
+  centerButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
 
   /* SEARCH */
