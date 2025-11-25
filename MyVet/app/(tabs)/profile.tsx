@@ -1,5 +1,6 @@
 // app/(tabs)/profile.tsx
 import React, { useState, useEffect } from 'react';
+import { sendImmediateAINotification } from "@/utils/aiNotifications";
 import {
   View,
   Text,
@@ -354,7 +355,7 @@ export default function ProfileScreen() {
                 </View>
 
                 <TouchableOpacity
-                   onPress={() => handleEditPet(pet)}
+                  onPress={() => handleEditPet(pet)}
                 >
                   <Text style={styles.viewProfileText}>Editar mascota</Text>
                 </TouchableOpacity>
@@ -362,6 +363,16 @@ export default function ProfileScreen() {
             ))
           )}
         </View>
+
+        <TouchableOpacity
+          onPress={sendImmediateAINotification}
+          style={styles.aiButton}
+        >
+          <Ionicons name="sparkles-outline" size={20} color="#FFF" />
+          <Text style={styles.aiButtonText}>Dato curioso IA</Text>
+        </TouchableOpacity>
+
+
 
         {/* LOGOUT */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -406,7 +417,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex:1,
+    flex: 1,
     backgroundColor: '#fff',
   },
 
@@ -469,6 +480,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 3,
     borderColor: '#fff',
+  },
+  aiButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#7B2FF7",
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginBottom: 20,
+    marginHorizontal: 20,
+    gap: 8,
+  },
+  aiButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 
   profileName: {

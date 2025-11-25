@@ -59,10 +59,10 @@ export default function Login() {
         <Text style={styles.logo}>MyVet</Text>
 
         <View style={styles.card}>
-          <Text style={styles.title}>Log In</Text>
+          <Text style={styles.title}>Iniciar sesión</Text>
 
           <TextInput
-            placeholder="Email"
+            placeholder="Correo electrónico"
             style={styles.input}
             placeholderTextColor="#777"
             value={email}
@@ -74,7 +74,7 @@ export default function Login() {
             autoCapitalize="none"
           />
           <TextInput
-            placeholder="Password"
+            placeholder="Contraseña"
             style={styles.input}
             placeholderTextColor="#777"
             secureTextEntry
@@ -93,16 +93,16 @@ export default function Login() {
             {isLoading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text style={styles.buttonText}>Log In</Text>
+              <Text style={styles.buttonText}>Iniciar sesión</Text>
             )}
           </TouchableOpacity>
 
           <Link href="/reset" style={styles.link}>
-            Forgot password?
+            ¿Olvidaste tu contraseña?
           </Link>
 
           <Link href="/register" style={styles.registerLink}>
-            Create Account
+            Crear cuenta
           </Link>
         </View>
       </View>
@@ -111,7 +111,7 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1, backgroundColor: "#7B2CBF" },
+  background: { flex: 1, backgroundColor: "#7B2FF7" },
   container: { flex: 1, justifyContent: "center", alignItems: "center" },
   logo: { fontSize: 48, fontWeight: "bold", color: "white", marginBottom: 30 },
   card: { width: "85%", backgroundColor: "white", borderRadius: 25, padding: 25, alignItems: "center" },
@@ -119,14 +119,14 @@ const styles = StyleSheet.create({
   input: {
     width: "100%",
     borderWidth: 2,
-    borderColor: "#7B2CBF",
+    borderColor: "#7B2FF7",
     borderRadius: 10,
     padding: 12,
     marginBottom: 15,
     fontSize: 16,
   },
   button: {
-    backgroundColor: "#7B2CBF",
+    backgroundColor: "#7B2FF7",
     paddingVertical: 15,
     borderRadius: 10,
     width: "100%",
@@ -138,6 +138,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: { color: "white", fontSize: 18, fontWeight: "600" },
-  link: { color: "#7B2CBF", marginTop: 10 },
-  registerLink: { color: "#7B2CBF", fontWeight: "bold", marginTop: 20 },
+  link: { color: "#7B2FF7", marginTop: 10 },
+  registerLink: { color: "#7B2FF7", fontWeight: "bold", marginTop: 20 },
 });

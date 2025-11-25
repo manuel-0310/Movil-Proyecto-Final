@@ -30,13 +30,13 @@ export default function Reset() {
         <Text style={styles.logo}>MyVet</Text>
 
         <View style={styles.card}>
-          <Text style={styles.title}>Reset Password</Text>
+          <Text style={styles.title}>Restablecer contraseña</Text>
           <Text style={styles.description}>
             Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
           </Text>
 
           <TextInput
-            placeholder="Email"
+            placeholder="Correo electrónico"
             style={styles.input}
             placeholderTextColor="#777"
             value={email}
@@ -47,11 +47,11 @@ export default function Reset() {
           />
 
           <TouchableOpacity style={styles.button} onPress={handleReset}>
-            <Text style={styles.buttonText}>Send Reset Link</Text>
+            <Text style={styles.buttonText}>Enviar enlace</Text>
           </TouchableOpacity>
 
           <Link href="/login" style={styles.link}>
-            Back to Login
+            Volver a iniciar sesión
           </Link>
         </View>
       </View>
@@ -60,7 +60,7 @@ export default function Reset() {
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1, backgroundColor: "#7B2CBF" },
+  background: { flex: 1, backgroundColor: "#7B2FF7" },
   container: { flex: 1, justifyContent: "center", alignItems: "center" },
   logo: { fontSize: 48, fontWeight: "bold", color: "white", marginBottom: 30 },
   card: { width: "85%", backgroundColor: "white", borderRadius: 25, padding: 25, alignItems: "center" },
@@ -75,14 +75,14 @@ const styles = StyleSheet.create({
   input: {
     width: "100%",
     borderWidth: 1.5,
-    borderColor: "#7B2CBF",
+    borderColor: "#7B2FF7",
     borderRadius: 10,
     padding: 12,
     marginBottom: 15,
     fontSize: 16,
   },
   button: {
-    backgroundColor: "#7B2CBF",
+    backgroundColor: "#7B2FF7",
     paddingVertical: 15,
     borderRadius: 10,
     width: "100%",
@@ -90,6 +90,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonText: { color: "white", fontSize: 18, fontWeight: "600" },
-  link: { color: "#7B2CBF", marginTop: 20, fontWeight: "bold" },
+  link: { color: "#7B2FF7", marginTop: 20, fontWeight: "bold" },
 });
 

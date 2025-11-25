@@ -269,7 +269,7 @@ export default function HomeScreen() {
             <Text style={styles.question}>
               ¿Qué pregunta tienes hoy para nuestro Veterinario Virtual?
             </Text>
-          </View>cd myv
+          </View>
           <TouchableOpacity 
             style={styles.qrButton}
             onPress={() => setShowQRModal(true)}

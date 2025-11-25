@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     header: {
-
+        backgroundColor: "#ffffff",
         flexDirection: "row",
         alignItems: "center",
         gap: 15,
@@ -470,11 +470,13 @@ const styles = StyleSheet.create({
         marginBottom: 0,
     },
     pickerContainer: {
+        alignContent:"center",
+        alignItems: "center",
         backgroundColor: "#fff",
         padding: 20,
         borderRadius: 16,
         width: "85%",
-        height: "85%",
+        height: "30%",
         shadowColor: "#000",
         shadowOpacity: 0.25,
         shadowRadius: 8,
