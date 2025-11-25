@@ -157,9 +157,6 @@ export default function PetInfoScreen() {
         >
           <Ionicons name="close" size={28} color="#fff" />
         </TouchableOpacity>
-        <View style={styles.headerIcon}>
-          <Ionicons name="paw" size={32} color="#fff" />
-        </View>
       </View>
 
       <ScrollView
@@ -308,8 +305,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
   },
 
   closeButton: {

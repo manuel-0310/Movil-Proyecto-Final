@@ -19,7 +19,10 @@ const ONBOARDING_KEY = '@MyVet:hasSeenOnboarding';
 const FIRST_PET_KEY = '@MyVet:hasCreatedFirstPet';
 const FIRST_LOGIN_KEY = '@MyVet:isFirstLogin';
 
-export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+// ⚠️ ACTIVAR/DESACTIVAR MODO PRUEBA
+const TEST_MODE = true;
+
+export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
   const [hasCreatedFirstPet, setHasCreatedFirstPet] = useState(false);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
@@ -41,61 +44,48 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       setHasCreatedFirstPet(firstPet === 'true');
       setIsFirstLogin(firstLogin === 'true');
     } catch (error) {
-      console.error('Error loading onboarding status:', error);
+      console.error("Error loading onboarding:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const completeOnboarding = async () => {
-    try {
-      await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-      setHasSeenOnboarding(true);
-    } catch (error) {
-      console.error('Error completing onboarding:', error);
-    }
+    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+    setHasSeenOnboarding(true);
   };
 
   const completeFirstPetSetup = async () => {
-    try {
-      await AsyncStorage.setItem(FIRST_PET_KEY, 'true');
-      setHasCreatedFirstPet(true);
-      // También marcamos que ya no es el primer login
-      await AsyncStorage.setItem(FIRST_LOGIN_KEY, 'false');
-      setIsFirstLogin(false);
-    } catch (error) {
-      console.error('Error completing first pet setup:', error);
-    }
+    await AsyncStorage.setItem(FIRST_PET_KEY, 'true');
+    await AsyncStorage.setItem(FIRST_LOGIN_KEY, 'false');
+    setHasCreatedFirstPet(true);
+    setIsFirstLogin(false);
   };
 
   const markFirstLogin = async () => {
-    try {
-      await AsyncStorage.setItem(FIRST_LOGIN_KEY, 'true');
-      setIsFirstLogin(true);
-    } catch (error) {
-      console.error('Error marking first login:', error);
-    }
+    await AsyncStorage.setItem(FIRST_LOGIN_KEY, 'true');
+    setIsFirstLogin(true);
   };
 
   const resetOnboarding = async () => {
-    try {
-      await Promise.all([
-        AsyncStorage.removeItem(ONBOARDING_KEY),
-        AsyncStorage.removeItem(FIRST_PET_KEY),
-        AsyncStorage.removeItem(FIRST_LOGIN_KEY),
-      ]);
-      setHasSeenOnboarding(false);
-      setHasCreatedFirstPet(false);
-      setIsFirstLogin(false);
-    } catch (error) {
-      console.error('Error resetting onboarding:', error);
-    }
+    await Promise.all([
+      AsyncStorage.removeItem(ONBOARDING_KEY),
+      AsyncStorage.removeItem(FIRST_PET_KEY),
+      AsyncStorage.removeItem(FIRST_LOGIN_KEY),
+    ]);
+
+    setHasSeenOnboarding(false);
+    setHasCreatedFirstPet(false);
+    setIsFirstLogin(false);
   };
+
+  // 🔥 TEST_MODE fuerza que SIEMPRE falte el onboarding
+  const overriddenHasSeenOnboarding = TEST_MODE ? false : hasSeenOnboarding;
 
   return (
     <OnboardingContext.Provider
       value={{
-        hasSeenOnboarding,
+        hasSeenOnboarding: overriddenHasSeenOnboarding,
         hasCreatedFirstPet,
         isFirstLogin,
         completeOnboarding,
@@ -113,7 +103,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 export const useOnboarding = () => {
   const context = useContext(OnboardingContext);
   if (!context) {
-    throw new Error('useOnboarding must be used within an OnboardingProvider');
+    throw new Error("useOnboarding must be used within an OnboardingProvider");
   }
   return context;
 };

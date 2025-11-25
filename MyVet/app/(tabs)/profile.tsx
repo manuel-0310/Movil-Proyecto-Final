@@ -238,9 +238,6 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <Ionicons name="paw" size={40} color="#fff" />
-        </View>
 
         <View style={styles.profilePhotoContainer}>
           <TouchableOpacity onPress={selectProfilePhoto} activeOpacity={0.8}>
@@ -278,7 +275,7 @@ export default function ProfileScreen() {
       >
         {/* PERSONAL INFORMATION */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
+          <Text style={styles.sectionTitle}>Información Personal</Text>
 
           <View style={styles.infoCard}>
             <View style={styles.infoItem}>
@@ -286,7 +283,7 @@ export default function ProfileScreen() {
                 <Ionicons name="call" size={20} color="#7B2FF7" />
               </View>
               <View style={styles.infoTextContainer}>
-                <Text style={styles.infoLabel}>Phone number</Text>
+                <Text style={styles.infoLabel}>Número de teléfono</Text>
                 <Text style={styles.infoValue}>{profile?.phone || 'Sin teléfono'}</Text>
               </View>
             </View>
@@ -296,8 +293,8 @@ export default function ProfileScreen() {
                 <Ionicons name="location" size={20} color="#7B2FF7" />
               </View>
               <View style={styles.infoTextContainer}>
-                <Text style={styles.infoLabel}>Address</Text>
-                <Text style={styles.infoValue}>Fake street</Text>
+                <Text style={styles.infoLabel}>Dirección</Text>
+                <Text style={styles.infoValue}>Sin dirección</Text>
               </View>
             </View>
 
@@ -306,7 +303,7 @@ export default function ProfileScreen() {
                 <Ionicons name="business" size={20} color="#7B2FF7" />
               </View>
               <View style={styles.infoTextContainer}>
-                <Text style={styles.infoLabel}>City</Text>
+                <Text style={styles.infoLabel}>Ciudad</Text>
                 <Text style={styles.infoValue}>{profile?.city || 'Sin ciudad'}</Text>
               </View>
             </View>
@@ -315,14 +312,14 @@ export default function ProfileScreen() {
               style={styles.editButton}
               onPress={() => setEditProfileVisible(true)}
             >
-              <Text style={styles.editButtonText}>Edit personal information</Text>
+              <Text style={styles.editButtonText}>Editar información personal</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* MY PETS */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>My pets</Text>
+          <Text style={styles.sectionTitle}>Mis mascotas</Text>
 
           {pets.length === 0 ? (
             <View style={styles.emptyState}>

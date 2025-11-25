@@ -55,6 +55,23 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
   const [breedList, setBreedList] = useState<string[]>([]);
 
   useEffect(() => {
+    fetchDogBreeds();
+    fetchCatBreeds();
+  }, []);
+
+  // Cuando el tipo cambie y las razas ya estén cargadas, asignamos la lista correcta
+  useEffect(() => {
+    if (type === "dog") {
+      setBreedList(dogBreeds);
+    } else if (type === "cat") {
+      setBreedList(catBreeds);
+    } else {
+      setBreedList([]);
+    }
+  }, [type, dogBreeds, catBreeds]);
+
+
+  useEffect(() => {
     if (pet) {
       setName(pet.name);
       setBreed(pet.breed);
@@ -311,30 +328,30 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
 
           <ScrollView style={styles.modalContent}>
             {/* 📸 FOTO */}
-<Text style={styles.label}>Foto</Text>
+            <Text style={styles.label}>Foto</Text>
 
-<TouchableOpacity
-  onPress={selectPhoto}
-  activeOpacity={0.8}
-  style={{ alignSelf: "flex-start" }}
->
-  {photoUri ? (
-    <View style={styles.photoWrapper}>
-      <Image
-        source={{ uri: photoUri }}
-        style={styles.petPhoto}
-      />
-      <View style={styles.cameraOverlay}>
-        <Ionicons name="camera" size={22} color="#fff" />
-      </View>
-    </View>
-  ) : (
-    <View style={styles.uploadBtn}>
-      <Text style={styles.uploadText}>Subir Foto</Text>
-      <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
-    </View>
-  )}
-</TouchableOpacity>
+            <TouchableOpacity
+              onPress={selectPhoto}
+              activeOpacity={0.8}
+              style={{ alignSelf: "flex-start" }}
+            >
+              {photoUri ? (
+                <View style={styles.photoWrapper}>
+                  <Image
+                    source={{ uri: photoUri }}
+                    style={styles.petPhoto}
+                  />
+                  <View style={styles.cameraOverlay}>
+                    <Ionicons name="camera" size={22} color="#fff" />
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.uploadBtn}>
+                  <Text style={styles.uploadText}>Subir Foto</Text>
+                  <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
+                </View>
+              )}
+            </TouchableOpacity>
 
             {/* NOMBRE */}
             <Text style={styles.label}>Nombre</Text>
@@ -350,16 +367,15 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
                     style={[styles.typeBtn, type === p.key && styles.typeBtnActive]}
                     onPress={() => {
                       setType(p.key);
+                      setBreed(""); // limpiar selección previa
+
                       if (p.key === "dog") {
-                        fetchDogBreeds();
-                        setBreedList(dogBreeds);
-                      }
-                      if (p.key === "cat") {
-                        fetchCatBreeds();
+                        setBreedList(dogBreeds); // usar la lista YA cargada
+                      } else if (p.key === "cat") {
                         setBreedList(catBreeds);
                       }
-                      setBreed("");
                     }}
+
                   >
                     <Image
                       source={type === p.key ? petIcons[p.key].active : petIcons[p.key].inactive}
@@ -487,6 +503,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     width: "85%",
+    maxHeight: "60%",
   },
   label: { color: "#000", fontWeight: "600", marginBottom: 6, marginTop: 12 },
   input: {
@@ -565,5 +582,5 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
   },
-  
+
 });

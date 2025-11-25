@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     View,
     Text,
@@ -45,21 +45,35 @@ export default function AddPet() {
         try {
             const res = await fetch("https://api.thedogapi.com/v1/breeds");
             const data = await res.json();
-            setDogBreeds(data.map((b: any) => b.name));
+    
+            const list = data.map((b: any) => b.name);
+    
+            setDogBreeds(list); 
+            setBreedList(list);   
         } catch (error) {
             console.log(error);
         }
     };
+    
+    useEffect(() => {
+        fetchDogBreeds();
+        }, []);
 
     const fetchCatBreeds = async () => {
         try {
             const res = await fetch("https://api.thecatapi.com/v1/breeds");
             const data = await res.json();
-            setCatBreeds(data.map((b: any) => b.name));
+    
+            const list = data.map((b: any) => b.name);
+    
+            setCatBreeds(list);
+            setBreedList(list);
         } catch (error) {
             console.log(error);
         }
     };
+    
+    
 
     const petTypes = [
         { key: "dog", icon: "paw", label: "Perro" },
@@ -327,16 +341,12 @@ export default function AddPet() {
                                     style={[styles.typeBtn, type === p.key && styles.typeBtnActive]}
                                     onPress={() => {
                                         setType(p.key);
-                                        if (p.key === "dog") {
-                                            fetchDogBreeds();
-                                            setBreedList(dogBreeds);
-                                        }
-                                        if (p.key === "cat") {
-                                            fetchCatBreeds();
-                                            setBreedList(catBreeds);
-                                        }
                                         setBreed("");
+                                    
+                                        if (p.key === "dog") fetchDogBreeds();
+                                        if (p.key === "cat") fetchCatBreeds();
                                     }}
+                                    
                                 >
                                     <Image
                                         source={type === p.key ? petIcons[p.key].active : petIcons[p.key].inactive}
@@ -464,6 +474,7 @@ const styles = StyleSheet.create({
         padding: 20,
         borderRadius: 16,
         width: "85%",
+        height: "85%",
         shadowColor: "#000",
         shadowOpacity: 0.25,
         shadowRadius: 8,

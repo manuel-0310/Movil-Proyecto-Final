@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
 
   priceTag: {
     alignSelf: 'flex-start',
-    backgroundColor: '#7B2CBF',
+    backgroundColor: '#7B2FF7',
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 16,

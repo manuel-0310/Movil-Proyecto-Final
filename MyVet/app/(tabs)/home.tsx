@@ -20,7 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import EditVaccineModal from "@/components/EditVaccineModal";
 import EditMedicalRecordModal from "@/components/EditMedicalRecordModal";
 import EditPetModal from "@/components/EditPetModal";
-import QRModal from "@/components/qrmodal";
+import QRModal from "@/components/QRmodal";
 
 const { width } = Dimensions.get('window');
 
@@ -269,10 +269,7 @@ export default function HomeScreen() {
             <Text style={styles.question}>
               ¿Qué pregunta tienes hoy para nuestro Veterinario Virtual?
             </Text>
-          </View>
-          <View style={styles.logoContainer}>
-            <Ionicons name="paw" size={40} color="#fff" />
-          </View>
+          </View>cd myv
           <TouchableOpacity 
             style={styles.qrButton}
             onPress={() => setShowQRModal(true)}
@@ -396,7 +393,7 @@ export default function HomeScreen() {
                       <Ionicons name="calendar-outline" size={18} color="#7B2CBF" />
                     </View>
                     <View>
-                      <Text style={styles.infoLabel}>Age</Text>
+                      <Text style={styles.infoLabel}>Edad</Text>
                       <Text style={styles.infoValue}>{calculateAge(selectedPet.birthday)}</Text>
                     </View>
                   </View>
@@ -406,9 +403,9 @@ export default function HomeScreen() {
                       <Ionicons name={selectedPet.sex === 'Male' ? 'male' : 'female'} size={18} color="#7B2CBF" />
                     </View>
                     <View>
-                      <Text style={styles.infoLabel}>Sex</Text>
+                      <Text style={styles.infoLabel}>Sexo</Text>
                       <Text style={styles.infoValue}>
-                        {selectedPet.sex === 'Male' ? 'Male' : selectedPet.sex === 'Female' ? 'Female' : 'Unknown'}
+                        {selectedPet.sex === 'Male' ? 'Macho' : selectedPet.sex === 'Female' ? 'Hembra' : 'Unknown'}
                       </Text>
                     </View>
                   </View>
@@ -420,7 +417,7 @@ export default function HomeScreen() {
                       <Ionicons name="scale-outline" size={18} color="#7B2CBF" />
                     </View>
                     <View>
-                      <Text style={styles.infoLabel}>Weight</Text>
+                      <Text style={styles.infoLabel}>Peso</Text>
                       <Text style={styles.infoValue}>{selectedPet.weight} kg</Text>
                     </View>
                   </View>
@@ -430,7 +427,7 @@ export default function HomeScreen() {
                       <Ionicons name="person-outline" size={18} color="#7B2CBF" />
                     </View>
                     <View>
-                      <Text style={styles.infoLabel}>Owner</Text>
+                      <Text style={styles.infoLabel}>Dueño</Text>
                       <Text style={styles.infoValue} numberOfLines={1}>
                         {userName}
                       </Text>
@@ -443,11 +440,11 @@ export default function HomeScreen() {
             {/* VACCINES SECTION */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Vaccines</Text>
+                <Text style={styles.sectionTitle}>Vacunas</Text>
                 <TouchableOpacity
                   onPress={() => router.push({ pathname: '/add-vaccine', params: { petId: selectedPet.id } })}
                 >
-                  <Text style={styles.addButton}>Add New Vaccine</Text>
+                  <Text style={styles.addButton}>Agregar vacuna</Text>
                 </TouchableOpacity>
               </View>
 
@@ -505,11 +502,11 @@ export default function HomeScreen() {
             {/* MEDICAL HISTORY SECTION */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Medical History</Text>
+                <Text style={styles.sectionTitle}>Historial médico</Text>
                 <TouchableOpacity
                   onPress={() => router.push({ pathname: '/add-medical-record', params: { petId: selectedPet.id } })}
                 >
-                  <Text style={styles.addButton}>Add New</Text>
+                  <Text style={styles.addButton}>Nuevo registro</Text>
                 </TouchableOpacity>
               </View>
 
