@@ -3,6 +3,7 @@ import { View, TouchableOpacity, StyleSheet, LayoutChangeEvent } from "react-nat
 import { Tabs, usePathname, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function BubbleTabsLayout() {
   return (
@@ -21,6 +22,7 @@ export default function BubbleTabsLayout() {
 function BubbleTabBar(props: any) {
   const pathname = usePathname();
   const router = useRouter();
+  const { theme } = useTheme();
   const [barWidth, setBarWidth] = useState(0);
 
   // Detectar si estamos dentro de un chat individual
@@ -66,10 +68,10 @@ function BubbleTabBar(props: any) {
     <View style={styles.wrapper} pointerEvents="box-none">
       {/* Solo mostrar la barra si NO estamos dentro de un chat */}
       {!isChatDetail && (
-        <View style={styles.tabBar} onLayout={onLayoutBar}>
+        <View style={[styles.tabBar, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.shadow }]} onLayout={onLayoutBar}>
           {TAB_WIDTH > 0 && (
             <Animated.View
-              style={[styles.bubble, { width: barWidth * 0.2 }, bubbleStyle]}
+              style={[styles.bubble, { width: barWidth * 0.2, backgroundColor: theme.colors.primaryDark }, bubbleStyle]}
             />
           )}
 
@@ -102,7 +104,7 @@ function BubbleTabBar(props: any) {
                 <Ionicons
                   name={isFocused ? filled : outline}
                   size={26}
-                  color="#fff"
+                  color={theme.colors.textInverse}
                 />
               </TouchableOpacity>
             );
@@ -127,11 +129,9 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 40,
     paddingHorizontal: 2,
-    backgroundColor: "#7B2FF7",
     flexDirection: "row",
     alignItems: "center",
     elevation: 10,
-    shadowColor: "#000",
     shadowOpacity: 0.12,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 6 },
@@ -143,7 +143,6 @@ const styles = StyleSheet.create({
     top: 10,
     bottom: 10,
     borderRadius: 999,
-    backgroundColor: "#9D4EDD",
     zIndex: 1,
   },
   tabButton: {

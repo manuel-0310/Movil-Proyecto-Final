@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { supabase } from '@/utils/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface UserProfile {
   id: string;
@@ -36,6 +37,7 @@ export default function EditProfileModal({
   onClose,
   onSave,
 }: EditProfileModalProps) {
+  const { theme } = useTheme();
   const [name, setName] = useState(profile.name);
   const [phone, setPhone] = useState(profile.phone);
   const [city, setCity] = useState(profile.city);
@@ -79,64 +81,84 @@ export default function EditProfileModal({
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
-        style={styles.modalOverlay}
+        style={[styles.modalOverlay, { backgroundColor: theme.colors.overlay }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
           {/* HEADER */}
-          <View style={styles.modalHeader}>
+          <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={28} color="#111827" />
+              <Ionicons name="close" size={28} color={theme.colors.text} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Edit Profile</Text>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Edit Profile</Text>
             <View style={{ width: 28 }} />
           </View>
 
           <ScrollView style={styles.modalContent}>
             {/* NAME */}
-            <Text style={styles.label}>Full Name *</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Full Name *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: theme.colors.cardBackground,
+                color: theme.colors.text,
+                borderColor: theme.colors.border
+              }]}
               placeholder="Enter your name"
               value={name}
               onChangeText={setName}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.colors.textTertiary}
             />
 
             {/* EMAIL (READ ONLY) */}
-            <Text style={styles.label}>Email</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Email</Text>
             <TextInput
-              style={[styles.input, styles.inputDisabled]}
+              style={[styles.input, styles.inputDisabled, { 
+                backgroundColor: theme.colors.backgroundTertiary,
+                color: theme.colors.textSecondary,
+                borderColor: theme.colors.border
+              }]}
               value={profile.email}
               editable={false}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.colors.textTertiary}
             />
-            <Text style={styles.helperText}>El email no se puede cambiar</Text>
+            <Text style={[styles.helperText, { color: theme.colors.textSecondary }]}>El email no se puede cambiar</Text>
 
             {/* PHONE */}
-            <Text style={styles.label}>Phone Number *</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Phone Number *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: theme.colors.cardBackground,
+                color: theme.colors.text,
+                borderColor: theme.colors.border
+              }]}
               placeholder="Enter your phone"
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.colors.textTertiary}
             />
 
             {/* CITY */}
-            <Text style={styles.label}>City *</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>City *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: theme.colors.cardBackground,
+                color: theme.colors.text,
+                borderColor: theme.colors.border
+              }]}
               placeholder="Enter your city"
               value={city}
               onChangeText={setCity}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.colors.textTertiary}
             />
 
             {/* SAVE BUTTON */}
             <TouchableOpacity
-              style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+              style={[
+                styles.saveButton, 
+                { backgroundColor: theme.colors.primary },
+                loading && styles.saveButtonDisabled
+              ]}
               onPress={handleSave}
               disabled={loading}
             >
@@ -146,7 +168,7 @@ export default function EditProfileModal({
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={[styles.cancelButtonText, { color: theme.colors.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -158,12 +180,10 @@ export default function EditProfileModal({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
 
   modalContainer: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '90%',
@@ -176,13 +196,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
 
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#111827',
   },
 
   modalContent: {
@@ -192,34 +210,27 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
     marginBottom: 8,
     marginTop: 16,
   },
 
   input: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#fff',
   },
 
   inputDisabled: {
-    backgroundColor: '#F3F4F6',
-    color: '#9CA3AF',
+    // Estilos aplicados dinámicamente
   },
 
   helperText: {
     fontSize: 12,
-    color: '#6B7280',
     marginTop: 4,
   },
 
   saveButton: {
-    backgroundColor: '#7B2CBF',
     padding: 18,
     borderRadius: 12,
     alignItems: 'center',
@@ -244,7 +255,6 @@ const styles = StyleSheet.create({
   },
 
   cancelButtonText: {
-    color: '#6B7280',
     fontSize: 16,
     fontWeight: '600',
   },

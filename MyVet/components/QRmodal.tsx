@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
 import { router } from 'expo-router';
 
 const { width } = Dimensions.get('window');
@@ -19,6 +20,7 @@ interface QRModalProps {
 }
 
 export default function QRModal({ visible, onClose }: QRModalProps) {
+  const { theme } = useTheme();
   return (
     <Modal
       visible={visible}
@@ -27,7 +29,7 @@ export default function QRModal({ visible, onClose }: QRModalProps) {
       onRequestClose={onClose}
     >
       <TouchableOpacity
-        style={styles.overlay}
+        style={[styles.overlay, { backgroundColor: theme.colors.overlay }]}
         activeOpacity={1}
         onPress={onClose}
       >
@@ -35,58 +37,58 @@ export default function QRModal({ visible, onClose }: QRModalProps) {
           <TouchableOpacity
             activeOpacity={1}
             onPress={(e) => e.stopPropagation()}
-            style={styles.modalContent}
+            style={[styles.modalContent, { backgroundColor: theme.colors.background }]}
           >
             <View style={styles.header}>
-              <Text style={styles.title}>Smart QR</Text>
+              <Text style={[styles.title, { color: theme.colors.text }]}>Smart QR</Text>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Ionicons name="close" size={28} color="#111827" />
+                <Ionicons name="close" size={28} color={theme.colors.text} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.description}>
+            <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
               Gestiona los códigos QR de tus mascotas para que puedan ser
               identificadas fácilmente si se pierden.
             </Text>
 
             {/* OPCIÓN 1: CREAR QR */}
             <TouchableOpacity
-              style={styles.optionCard}
+              style={[styles.optionCard, { backgroundColor: theme.colors.cardBackground }]}
               onPress={() => {
                 onClose();
                 router.push('../qr/create');
               }}
             >
-              <View style={styles.iconContainer}>
-                <Ionicons name="qr-code" size={32} color="#7B2CBF" />
+              <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryLight }]}>
+                <Ionicons name="qr-code" size={32} color={theme.colors.primary} />
               </View>
               <View style={styles.optionInfo}>
-                <Text style={styles.optionTitle}>Crear QR</Text>
-                <Text style={styles.optionDescription}>
+                <Text style={[styles.optionTitle, { color: theme.colors.text }]}>Crear QR</Text>
+                <Text style={[styles.optionDescription, { color: theme.colors.textSecondary }]}>
                   Genera un código QR para tu mascota
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={24} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={24} color={theme.colors.textTertiary} />
             </TouchableOpacity>
 
             {/* OPCIÓN 2: ESCANEAR QR */}
             <TouchableOpacity
-              style={styles.optionCard}
+              style={[styles.optionCard, { backgroundColor: theme.colors.cardBackground }]}
               onPress={() => {
                 onClose();
                 router.push('../qr/scan');
               }}
             >
-              <View style={styles.iconContainer}>
-                <Ionicons name="scan" size={32} color="#7B2CBF" />
+              <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryLight }]}>
+                <Ionicons name="scan" size={32} color={theme.colors.primary} />
               </View>
               <View style={styles.optionInfo}>
-                <Text style={styles.optionTitle}>Escanear QR</Text>
-                <Text style={styles.optionDescription}>
+                <Text style={[styles.optionTitle, { color: theme.colors.text }]}>Escanear QR</Text>
+                <Text style={[styles.optionDescription, { color: theme.colors.textSecondary }]}>
                   Lee la información de un código QR
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={24} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={24} color={theme.colors.textTertiary} />
             </TouchableOpacity>
           </TouchableOpacity>
         </View>
@@ -98,7 +100,6 @@ export default function QRModal({ visible, onClose }: QRModalProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -109,7 +110,6 @@ const styles = StyleSheet.create({
   },
 
   modalContent: {
-    backgroundColor: '#fff',
     borderRadius: 24,
     padding: 24,
   },
@@ -124,7 +124,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#111827',
   },
 
   closeButton: {
@@ -133,7 +132,6 @@ const styles = StyleSheet.create({
 
   description: {
     fontSize: 14,
-    color: '#6B7280',
     lineHeight: 20,
     marginBottom: 24,
   },
@@ -141,7 +139,6 @@ const styles = StyleSheet.create({
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
     padding: 16,
     borderRadius: 16,
     marginBottom: 12,
@@ -151,7 +148,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#F3E8FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -164,12 +160,10 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 4,
   },
 
   optionDescription: {
     fontSize: 14,
-    color: '#6B7280',
   },
 });

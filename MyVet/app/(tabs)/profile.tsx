@@ -17,6 +17,7 @@ import {
 import { router } from 'expo-router';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import EditProfileModal from '@/components/EditProfileModal';
 import EditPetModal from '@/components/EditPetModal';
@@ -44,6 +45,7 @@ interface Pet {
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const { theme, themeMode, setThemeMode, isDark } = useTheme();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +55,16 @@ export default function ProfileScreen() {
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [premiumModalVisible, setPremiumModalVisible] = useState(false);
+
+  const toggleTheme = () => {
+    if (themeMode === 'light') {
+      setThemeMode('dark');
+    } else if (themeMode === 'dark') {
+      setThemeMode('auto');
+    } else {
+      setThemeMode('light');
+    }
+  };
   
 
   useEffect(() => {
@@ -233,16 +245,16 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7B2CBF" />
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
 
         <View style={styles.profilePhotoContainer}>
           <TouchableOpacity onPress={selectProfilePhoto} activeOpacity={0.8}>
@@ -252,13 +264,13 @@ export default function ProfileScreen() {
                 style={styles.profilePhoto}
               />
             ) : (
-              <View style={styles.profilePhotoPlaceholder}>
-                <Ionicons name="person" size={50} color="#7B2CBF" />
+              <View style={[styles.profilePhotoPlaceholder, { backgroundColor: theme.colors.primary }]}>
+                <Ionicons name="person" size={50} color={theme.colors.textInverse} />
               </View>
             )}
 
             {/* CAMERA ICON OVERLAY */}
-            <View style={styles.cameraIconContainer}>
+            <View style={[styles.cameraIconContainer, { backgroundColor: theme.colors.primary }]}>
               {uploadingPhoto ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
@@ -278,38 +290,70 @@ export default function ProfileScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        {/* THEME TOGGLE */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Apariencia</Text>
+          <View style={[styles.infoCard, { backgroundColor: theme.colors.cardBackground }]}>
+            <TouchableOpacity
+              style={styles.themeToggleItem}
+              onPress={toggleTheme}
+            >
+              <View style={styles.themeToggleLeft}>
+                <View style={[styles.themeIconContainer, { backgroundColor: theme.colors.primaryLight }]}>
+                  <Ionicons 
+                    name={isDark ? "moon" : "sunny"} 
+                    size={20} 
+                    color={theme.colors.primary} 
+                  />
+                </View>
+                <View style={styles.themeTextContainer}>
+                  <Text style={[styles.themeTitle, { color: theme.colors.text }]}>Tema</Text>
+                  <Text style={[styles.themeSubtitle, { color: theme.colors.textSecondary }]}>
+                    {themeMode === 'auto' ? 'Automático' : themeMode === 'dark' ? 'Oscuro' : 'Claro'}
+                  </Text>
+                </View>
+              </View>
+              <Ionicons 
+                name="chevron-forward" 
+                size={20} 
+                color={theme.colors.textTertiary} 
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* PERSONAL INFORMATION */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Información Personal</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Información Personal</Text>
 
-          <View style={styles.infoCard}>
+          <View style={[styles.infoCard, { backgroundColor: theme.colors.cardBackground }]}>
             <View style={styles.infoItem}>
-              <View style={styles.infoIconContainer}>
-                <Ionicons name="call" size={20} color="#7B2FF7" />
+              <View style={[styles.infoIconContainer, { backgroundColor: theme.colors.primaryLight }]}>
+                <Ionicons name="call" size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.infoTextContainer}>
-                <Text style={styles.infoLabel}>Número de teléfono</Text>
-                <Text style={styles.infoValue}>{profile?.phone || 'Sin teléfono'}</Text>
+                <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Número de teléfono</Text>
+                <Text style={[styles.infoValue, { color: theme.colors.text }]}>{profile?.phone || 'Sin teléfono'}</Text>
               </View>
             </View>
 
             <View style={styles.infoItem}>
-              <View style={styles.infoIconContainer}>
-                <Ionicons name="location" size={20} color="#7B2FF7" />
+              <View style={[styles.infoIconContainer, { backgroundColor: theme.colors.primaryLight }]}>
+                <Ionicons name="location" size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.infoTextContainer}>
-                <Text style={styles.infoLabel}>Dirección</Text>
-                <Text style={styles.infoValue}>Sin dirección</Text>
+                <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Dirección</Text>
+                <Text style={[styles.infoValue, { color: theme.colors.text }]}>Sin dirección</Text>
               </View>
             </View>
 
             <View style={styles.infoItem}>
-              <View style={styles.infoIconContainer}>
-                <Ionicons name="business" size={20} color="#7B2FF7" />
+              <View style={[styles.infoIconContainer, { backgroundColor: theme.colors.primaryLight }]}>
+                <Ionicons name="business" size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.infoTextContainer}>
-                <Text style={styles.infoLabel}>Ciudad</Text>
-                <Text style={styles.infoValue}>{profile?.city || 'Sin ciudad'}</Text>
+                <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Ciudad</Text>
+                <Text style={[styles.infoValue, { color: theme.colors.text }]}>{profile?.city || 'Sin ciudad'}</Text>
               </View>
             </View>
 
@@ -317,21 +361,21 @@ export default function ProfileScreen() {
               style={styles.editButton}
               onPress={() => setEditProfileVisible(true)}
             >
-              <Text style={styles.editButtonText}>Editar información personal</Text>
+              <Text style={[styles.editButtonText, { color: theme.colors.primary }]}>Editar información personal</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* MY PETS */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mis mascotas</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Mis mascotas</Text>
 
           {pets.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="paw-outline" size={60} color="#D1D5DB" />
-              <Text style={styles.emptyText}>No tienes mascotas registradas</Text>
+              <Ionicons name="paw-outline" size={60} color={theme.colors.textTertiary} />
+              <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No tienes mascotas registradas</Text>
               <TouchableOpacity
-                style={styles.addPetButton}
+                style={[styles.addPetButton, { backgroundColor: theme.colors.primary }]}
                 onPress={() => router.push('/add-pet')}
               >
                 <Text style={styles.addPetButtonText}>Agregar Mascota</Text>
@@ -341,27 +385,27 @@ export default function ProfileScreen() {
             pets.map((pet) => (
               <TouchableOpacity
                 key={pet.id}
-                style={styles.petItem}
+                style={[styles.petItem, { backgroundColor: theme.colors.cardBackground }]}
               >
                 <View style={styles.petIconContainer}>
                   {pet.photo_url ? (
                     <Image source={{ uri: pet.photo_url }} style={styles.petPhoto} />
                   ) : (
-                    <View style={styles.petIconPlaceholder}>
-                      <Ionicons name={getPetIcon(pet.type)} size={24} color="#7B2CBF" />
+                    <View style={[styles.petIconPlaceholder, { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary }]}>
+                      <Ionicons name={getPetIcon(pet.type)} size={24} color={theme.colors.primary} />
                     </View>
                   )}
                 </View>
 
                 <View style={styles.petInfo}>
-                  <Text style={styles.petName}>{pet.name}</Text>
-                  <Text style={styles.petBreed}>{pet.breed || 'Sin raza'}</Text>
+                  <Text style={[styles.petName, { color: theme.colors.text }]}>{pet.name}</Text>
+                  <Text style={[styles.petBreed, { color: theme.colors.textSecondary }]}>{pet.breed || 'Sin raza'}</Text>
                 </View>
 
                 <TouchableOpacity
                   onPress={() => handleEditPet(pet)}
                 >
-                  <Text style={styles.viewProfileText}>Editar mascota</Text>
+                  <Text style={[styles.viewProfileText, { color: theme.colors.primary }]}>Editar mascota</Text>
                 </TouchableOpacity>
               </TouchableOpacity>
             ))
@@ -370,16 +414,16 @@ export default function ProfileScreen() {
 
         <TouchableOpacity
           onPress={sendImmediateAINotification}
-          style={styles.aiButton}
+          style={[styles.aiButton, { backgroundColor: theme.colors.primary }]}
         >
           <Ionicons name="sparkles-outline" size={20} color="#FFF" />
           <Text style={styles.aiButtonText}>Enviar notificación</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-  onPress={() => setPremiumModalVisible(true)}
-  style={styles.aiButton}
->
+          onPress={() => setPremiumModalVisible(true)}
+          style={[styles.aiButton, { backgroundColor: theme.colors.primary }]}
+        >
   <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: "700" }}>
     ⭐ Quiero ser Premium
   </Text>
@@ -390,9 +434,15 @@ export default function ProfileScreen() {
 
 
         {/* LOGOUT */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={24} color="#EF4444" />
-          <Text style={styles.logoutText}>Cerrar Sesión</Text>
+        <TouchableOpacity 
+          style={[styles.logoutButton, { 
+            borderColor: theme.colors.error + '30',
+            backgroundColor: theme.colors.error + '10'
+          }]} 
+          onPress={handleLogout}
+        >
+          <Ionicons name="log-out-outline" size={24} color={theme.colors.error} />
+          <Text style={[styles.logoutText, { color: theme.colors.error }]}>Cerrar Sesión</Text>
         </TouchableOpacity>
 
         <View style={{ height: 100 }} />
@@ -438,19 +488,16 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
 
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
 
   /* HEADER */
   header: {
-    backgroundColor: '#7B2FF7',
     paddingTop: 80,
     paddingBottom: 30,
     alignItems: 'center',
@@ -483,7 +530,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 4,
     borderColor: '#fff',
-    backgroundColor: '#7B2FF7',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -492,7 +538,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#7B2FF7',
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -538,13 +583,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 16,
   },
 
   /* INFO CARD */
   infoCard: {
-    backgroundColor: '#F9FAFB',
     borderRadius: 16,
     padding: 16,
   },
@@ -554,14 +597,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
 
   infoIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3E8FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -573,13 +614,11 @@ const styles = StyleSheet.create({
 
   infoLabel: {
     fontSize: 12,
-    color: '#6B7280',
     marginBottom: 2,
   },
 
   infoValue: {
     fontSize: 16,
-    color: '#111827',
     fontWeight: '500',
   },
 
@@ -591,15 +630,50 @@ const styles = StyleSheet.create({
 
   editButtonText: {
     fontSize: 14,
-    color: '#7B2FF7',
     fontWeight: '600',
+  },
+
+  /* THEME TOGGLE */
+  themeToggleItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+
+  themeToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+
+  themeIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+
+  themeTextContainer: {
+    flex: 1,
+  },
+
+  themeTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+
+  themeSubtitle: {
+    fontSize: 14,
   },
 
   /* PET ITEMS */
   petItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
     padding: 16,
     borderRadius: 16,
     marginBottom: 12,
@@ -614,18 +688,15 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     borderWidth: 2,
-    borderColor: '#7B2CBF',
   },
 
   petIconPlaceholder: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#F3E8FF',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#7B2CBF',
   },
 
   petInfo: {
@@ -635,18 +706,15 @@ const styles = StyleSheet.create({
   petName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
     marginBottom: 2,
   },
 
   petBreed: {
     fontSize: 14,
-    color: '#6B7280',
   },
 
   viewProfileText: {
     fontSize: 14,
-    color: '#7B2CBF',
     fontWeight: '600',
   },
 
@@ -658,13 +726,11 @@ const styles = StyleSheet.create({
 
   emptyText: {
     fontSize: 16,
-    color: '#6B7280',
     marginTop: 16,
     marginBottom: 24,
   },
 
   addPetButton: {
-    backgroundColor: '#7B2CBF',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 20,
@@ -685,14 +751,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#FEE2E2',
-    backgroundColor: '#FEF2F2',
     gap: 8,
   },
 
   logoutText: {
     fontSize: 16,
-    color: '#EF4444',
     fontWeight: '600',
   },
 });

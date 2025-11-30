@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface PremiumModalProps {
   visible: boolean;
@@ -17,26 +18,27 @@ interface PremiumModalProps {
 }
 
 export default function PremiumModal({ visible, onClose }: PremiumModalProps) {
+  const { theme } = useTheme();
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
-        <View style={styles.card}>
-          <View style={styles.header}>
-            <Ionicons name="star" size={32} color="#fff" />
+      <View style={[styles.overlay, { backgroundColor: theme.colors.overlay }]}>
+        <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
+            <Ionicons name="star" size={32} color={theme.colors.textInverse} />
             <Text style={styles.headerText}>MyVet Premium</Text>
           </View>
 
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
               Potencia tus herramientas veterinarias y cuida mejor a tus mascotas.
             </Text>
 
             {/* COMPARACIÓN */}
-            <View style={styles.table}>
-              <View style={styles.tableHeader}>
-                <Text style={[styles.tableTitle, { flex: 1 }]}>Función</Text>
-                <Text style={styles.tableTitle}>Free</Text>
-                <Text style={styles.tableTitle}>Premium</Text>
+            <View style={[styles.table, { backgroundColor: theme.colors.primaryLight }]}>
+              <View style={[styles.tableHeader, { borderBottomColor: theme.colors.primary + '40' }]}>
+                <Text style={[styles.tableTitle, { flex: 1, color: theme.colors.primary }]}>Función</Text>
+                <Text style={[styles.tableTitle, { color: theme.colors.primary }]}>Free</Text>
+                <Text style={[styles.tableTitle, { color: theme.colors.primary }]}>Premium</Text>
               </View>
 
               {[
@@ -66,26 +68,26 @@ export default function PremiumModal({ visible, onClose }: PremiumModalProps) {
                   premium: "Sí",
                 },
               ].map((row, i) => (
-                <View key={i} style={styles.tableRow}>
-                  <Text style={[styles.rowLabel, { flex: 1 }]}>{row.label}</Text>
+                <View key={i} style={[styles.tableRow, { borderBottomColor: theme.colors.primary + '30' }]}>
+                  <Text style={[styles.rowLabel, { flex: 1, color: theme.colors.text }]}>{row.label}</Text>
 
-                  <Text style={styles.rowValueFree}>{row.free}</Text>
-                  <Text style={styles.rowValuePremium}>{row.premium}</Text>
+                  <Text style={[styles.rowValueFree, { color: theme.colors.error }]}>{row.free}</Text>
+                  <Text style={[styles.rowValuePremium, { color: theme.colors.success }]}>{row.premium}</Text>
                 </View>
               ))}
             </View>
 
-            <Text style={styles.price}>$14.900 COP / mes</Text>
+            <Text style={[styles.price, { color: theme.colors.text }]}>$14.900 COP / mes</Text>
 
             <TouchableOpacity
-              style={styles.subscribeBtn}
+              style={[styles.subscribeBtn, { backgroundColor: theme.colors.primary }]}
               onPress={() => alert("Próximamente disponible")}
             >
               <Text style={styles.subscribeText}>Suscribirme</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={onClose}>
-              <Text style={styles.closeText}>Cerrar</Text>
+              <Text style={[styles.closeText, { color: theme.colors.textSecondary }]}>Cerrar</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -97,11 +99,9 @@ export default function PremiumModal({ visible, onClose }: PremiumModalProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.43)",
     justifyContent: "flex-end",
   },
   card: {
-    backgroundColor: "#fff",
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     paddingBottom: 15,
@@ -111,7 +111,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   header: {
-    backgroundColor: "#7B2Cff",
     paddingVertical: 25,
     alignItems: "center",
     borderTopLeftRadius: 26,
@@ -127,14 +126,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 15,
     marginTop: 18,
-    color: "#555",
     paddingHorizontal: 20,
     marginBottom: 25,
   },
   table: {
     width: "92%",
     alignSelf: "center",
-    backgroundColor: "#F4ECFF",
     padding: 12,
     borderRadius: 16,
   },
@@ -142,35 +139,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#D8C9FF",
     paddingBottom: 6,
   },
   tableTitle: {
     flex: 0.5,
     textAlign: "center",
     fontWeight: "700",
-    color: "#7B2CBF",
   },
   tableRow: {
     flexDirection: "row",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#E6DFFF",
   },
   rowLabel: {
     fontSize: 14,
-    color: "#333",
   },
   rowValueFree: {
     flex: 0.5,
     textAlign: "center",
-    color: "#C53030",
     fontWeight: "600",
   },
   rowValuePremium: {
     flex: 0.5,
     textAlign: "center",
-    color: "#2F855A",
     fontWeight: "700",
   },
   price: {
@@ -178,10 +169,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
     marginVertical: 20,
-    color: "#111",
   },
   subscribeBtn: {
-    backgroundColor: "#7B2Cff",
     marginHorizontal: 30,
     paddingVertical: 14,
     borderRadius: 14,
@@ -195,7 +184,6 @@ const styles = StyleSheet.create({
   closeText: {
     marginTop: 12,
     textAlign: "center",
-    color: "#777",
     fontSize: 15,
     fontWeight: "500",
   },

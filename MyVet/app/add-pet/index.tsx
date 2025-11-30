@@ -16,6 +16,7 @@ import { supabase } from "@/utils/supabase";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,6 +25,7 @@ export default function AddPet() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const { completeFirstPetSetup } = useOnboarding();
+    const { theme } = useTheme();
 
     const [name, setName] = useState("");
     const [breed, setBreed] = useState("");
@@ -262,8 +264,8 @@ export default function AddPet() {
         >
             {breedModalVisible && (
                 <Modal transparent animationType="fade">
-                    <View style={styles.pickerOverlay}>
-                        <View style={styles.pickerContainer}>
+                    <View style={[styles.pickerOverlay, { backgroundColor: theme.colors.overlay }]}>
+                        <View style={[styles.pickerContainer, { backgroundColor: theme.colors.card }]}>
                             <ScrollView>
                                 {breedList.map((b) => (
                                     <TouchableOpacity
@@ -274,7 +276,7 @@ export default function AddPet() {
                                         }}
                                         style={{ paddingVertical: 10 }}
                                     >
-                                        <Text style={{ fontSize: 16 }}>{b}</Text>
+                                        <Text style={{ fontSize: 16, color: theme.colors.text }}>{b}</Text>
                                     </TouchableOpacity>
                                 ))}
                             </ScrollView>
@@ -283,7 +285,7 @@ export default function AddPet() {
                                 style={{ marginTop: 20 }}
                                 onPress={() => setBreedModalVisible(false)}
                             >
-                                <Text style={{ textAlign: "center", color: "red" }}>
+                                <Text style={{ textAlign: "center", color: theme.colors.error }}>
                                     Cerrar
                                 </Text>
                             </TouchableOpacity>
@@ -292,53 +294,61 @@ export default function AddPet() {
                 </Modal>
             )}
 
-            <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+            <View style={[styles.header, { paddingTop: insets.top + 10, backgroundColor: theme.colors.background }]}>
                 <TouchableOpacity
-                    style={styles.exitBtn}
+                    style={[styles.exitBtn, { backgroundColor: theme.colors.primary }]}
                     onPress={() => router.replace("/(tabs)/home")}
                 >
-                    <Ionicons name="arrow-back-outline" size={20} color="#fff" />
+                    <Ionicons name="arrow-back-outline" size={20} color={theme.colors.textInverse} />
                 </TouchableOpacity>
-                <Text style={styles.title}>Agregar nueva mascota</Text>
+                <Text style={[styles.title, { color: theme.colors.text }]}>Agregar nueva mascota</Text>
             </View>
 
-            <ScrollView style={styles.container}>
+            <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
                 <View style={styles.content}>
 
                     {/* NOMBRE */}
-                    <Text style={styles.label}>Nombre de tu mascota</Text>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>Nombre de tu mascota</Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, { 
+                            backgroundColor: theme.colors.cardBackground,
+                            color: theme.colors.text,
+                            borderColor: theme.colors.border
+                        }]}
                         placeholder="ej. Luna"
                         value={name}
                         onChangeText={setName}
-                        placeholderTextColor="#777"
+                        placeholderTextColor={theme.colors.textTertiary}
                     />
 
                     {/* FOTO */}
-                    <Text style={styles.label}>Foto de Mascota</Text>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>Foto de Mascota</Text>
                     {photoUri ? (
                         <Image
                             source={{ uri: photoUri }}
                             style={{ width: 120, height: 120, borderRadius: 10, marginTop: 10 }}
                         />
                     ) : (
-                        <TouchableOpacity style={styles.uploadBtn} onPress={selectPhoto}>
+                        <TouchableOpacity style={[styles.uploadBtn, { backgroundColor: theme.colors.primary }]} onPress={selectPhoto}>
                             <Text style={styles.uploadText}>Subir Foto</Text>
-                            <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
+                            <Ionicons name="cloud-upload-outline" size={18} color={theme.colors.textInverse} />
                         </TouchableOpacity>
                     )}
 
 
 
                     {/* TIPO */}
-                    <Text style={styles.label}>Tipo de Mascota</Text>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>Tipo de Mascota</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View style={styles.typeRow}>
                             {petTypes.map((p) => (
                                 <TouchableOpacity
                                     key={p.key}
-                                    style={[styles.typeBtn, type === p.key && styles.typeBtnActive]}
+                                    style={[
+                                        styles.typeBtn, 
+                                        { borderColor: theme.colors.border },
+                                        type === p.key && [styles.typeBtnActive, { backgroundColor: theme.colors.primary }]
+                                    ]}
                                     onPress={() => {
                                         setType(p.key);
                                         setBreed("");
@@ -353,7 +363,7 @@ export default function AddPet() {
                                         style={{
                                             width: 32,
                                             height: 32,
-                                            tintColor: type === p.key ? "#fff" : "#7B2CBF"
+                                            tintColor: type === p.key ? theme.colors.textInverse : theme.colors.primary
                                         }}
                                     />
                                 </TouchableOpacity>
@@ -362,9 +372,12 @@ export default function AddPet() {
                     </ScrollView>
 
                     {/* RAZA */}
-                    <Text style={styles.label}>Raza</Text>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>Raza</Text>
                     <TouchableOpacity
-                        style={styles.input}
+                        style={[styles.input, { 
+                            backgroundColor: theme.colors.cardBackground,
+                            borderColor: theme.colors.border
+                        }]}
                         onPress={() => {
                             if (type === "dog" || type === "cat") {
                                 setBreedList(type === "dog" ? dogBreeds : catBreeds);
@@ -372,45 +385,53 @@ export default function AddPet() {
                             }
                         }}
                     >
-                        <Text style={{ color: breed ? "#000" : "#777" }}>
+                        <Text style={{ color: breed ? theme.colors.text : theme.colors.textTertiary }}>
                             {breed || "Seleccionar raza"}
                         </Text>
                     </TouchableOpacity>
 
                     {/* PESO */}
-                    <Text style={styles.label}>Peso (kg)</Text>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>Peso (kg)</Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, { 
+                            backgroundColor: theme.colors.cardBackground,
+                            color: theme.colors.text,
+                            borderColor: theme.colors.border
+                        }]}
                         placeholder="ej. 12.5"
                         value={weight}
                         onChangeText={(text) => setWeight(text.replace(/[^0-9.]/g, ''))}
                         keyboardType="decimal-pad"
-                        placeholderTextColor="#777"
+                        placeholderTextColor={theme.colors.textTertiary}
                     />
                     {/* FECHA DE NACIMIENTO */}
-                    <Text style={styles.label}>Fecha de Nacimiento</Text>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>Fecha de Nacimiento</Text>
                     <TouchableOpacity onPress={() => setShowDatePicker(true)} activeOpacity={0.8}>
-                        <View style={[styles.input, { justifyContent: "center" }]}>
-                            <Text style={{ color: "#000" }}>{formatDate(birthday)}</Text>
+                        <View style={[styles.input, { 
+                            justifyContent: "center",
+                            backgroundColor: theme.colors.cardBackground,
+                            borderColor: theme.colors.border
+                        }]}>
+                            <Text style={{ color: theme.colors.text }}>{formatDate(birthday)}</Text>
                         </View>
                     </TouchableOpacity>
 
                     {showDatePicker && (
                         <Modal transparent animationType="fade">
                             <TouchableOpacity
-                                style={styles.pickerOverlay}
+                                style={[styles.pickerOverlay, { backgroundColor: theme.colors.overlay }]}
                                 activeOpacity={1}
                                 onPress={() => setShowDatePicker(false)}
                             >
-                                <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
+                                <View style={[styles.pickerContainer, { backgroundColor: theme.colors.card }]}>
                                     {Platform.OS === "ios" ? (
-                                        <View style={{ backgroundColor: "#fff", borderRadius: 10 }}>
+                                        <View style={{ backgroundColor: theme.colors.card, borderRadius: 10 }}>
                                             <DateTimePicker
                                                 value={birthday}
                                                 mode="date"
                                                 display="spinner"
                                                 onChange={onDateChange}
-                                                textColor="black" // <- esto funciona en algunos entornos
+                                                textColor={theme.colors.text}
                                             />
                                         </View>
                                     ) : (
@@ -427,15 +448,23 @@ export default function AddPet() {
                     )}
 
                     {/* SEXO */}
-                    <Text style={styles.label}>Sexo</Text>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>Sexo</Text>
                     <View style={styles.sexRow}>
                         {["Male", "Female", "Unknown"].map((s) => (
                             <TouchableOpacity
                                 key={s}
-                                style={[styles.sexBtn, sex === s && styles.sexBtnActive]}
+                                style={[
+                                    styles.sexBtn, 
+                                    { borderColor: theme.colors.border },
+                                    sex === s && [styles.sexBtnActive, { backgroundColor: theme.colors.primary }]
+                                ]}
                                 onPress={() => setSex(s)}
                             >
-                                <Text style={[styles.sexText, sex === s && { color: "#fff" }]}>
+                                <Text style={[
+                                    styles.sexText, 
+                                    { color: theme.colors.text },
+                                    sex === s && { color: theme.colors.textInverse }
+                                ]}>
                                     {s === "Male" ? "Macho" : s === "Female" ? "Hembra" : "No lo sé"}
                                 </Text>
                             </TouchableOpacity>
@@ -443,7 +472,7 @@ export default function AddPet() {
                     </View>
 
                     {/* BOTÓN CREAR */}
-                    <TouchableOpacity style={styles.createBtn} onPress={savePet}>
+                    <TouchableOpacity style={[styles.createBtn, { backgroundColor: theme.colors.primary }]} onPress={savePet}>
                         <Text style={styles.createText}>Crear Mascota</Text>
                     </TouchableOpacity>
 
@@ -454,15 +483,13 @@ export default function AddPet() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#FFFFFF" },
+    container: { flex: 1 },
     pickerOverlay: {
         flex: 1,
-        backgroundColor: "rgba(0,0,0,0.5)",
         justifyContent: "center",
         alignItems: "center",
     },
     header: {
-        backgroundColor: "#ffffff",
         flexDirection: "row",
         alignItems: "center",
         gap: 15,
@@ -471,7 +498,6 @@ const styles = StyleSheet.create({
     },
     pickerContainer: {
         alignItems: "center",
-        backgroundColor: "#fff",
         padding: 20,
         borderRadius: 16,
         width: "85%",
@@ -483,7 +509,6 @@ const styles = StyleSheet.create({
     },
     content: { padding: 25 },
     exitBtn: {
-        backgroundColor: "#7B2CBF",
         padding: 10,
         borderRadius: 30,
         width: 42,
@@ -495,23 +520,19 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 24,
         fontWeight: "700",
-        color: "#000",
     },
     label: {
-        color: "#000",
         fontWeight: "600",
         marginBottom: 6,
         marginTop: 12,
     },
     input: {
         borderWidth: 1.5,
-        borderColor: "#7B2CBF",
         borderRadius: 10,
         padding: 12,
         fontSize: 16,
     },
     uploadBtn: {
-        backgroundColor: "#7B2CBF",
         borderRadius: 10,
         padding: 12,
         flexDirection: "row",
@@ -531,32 +552,26 @@ const styles = StyleSheet.create({
         height: 62,
         borderRadius: 10,
         borderWidth: 2,
-        borderColor: "#7B2CBF",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#fff",
     },
     typeBtnActive: {
-        backgroundColor: "#7B2CBF",
-        borderColor: "#7B2CBF",
+        // Estilos aplicados dinámicamente
     },
     sexRow: { flexDirection: "row", gap: 12, marginTop: 10 },
     sexBtn: {
         borderWidth: 1.5,
-        borderColor: "#7B2CBF",
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 10,
     },
     sexBtnActive: {
-        backgroundColor: "#7B2CBF",
+        // Estilos aplicados dinámicamente
     },
     sexText: {
-        color: "#7B2CBF",
         fontWeight: "600",
     },
     createBtn: {
-        backgroundColor: "#7B2CBF",
         borderRadius: 10,
         paddingVertical: 16,
         marginTop: 30,

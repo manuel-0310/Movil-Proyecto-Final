@@ -12,6 +12,7 @@ import {
 import { router, useFocusEffect } from 'expo-router';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Chat } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { SwipeListView } from 'react-native-swipe-list-view';
@@ -23,6 +24,7 @@ interface ChatWithLastMessage extends Chat {
 
 export default function ChatsScreen() {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [chats, setChats] = useState<ChatWithLastMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -161,22 +163,22 @@ export default function ChatsScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.chatItem}
+        style={[styles.chatItem, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.borderLight }]}
         onPress={() => router.push(`/chats/${item.id}`)}
         activeOpacity={1}
       >
-        <View style={styles.chatIcon}>
-          <Ionicons name="medical" size={24} color="#7B2FF7" />
+        <View style={[styles.chatIcon, { backgroundColor: theme.colors.primaryLight }]}>
+          <Ionicons name="medical" size={24} color={theme.colors.primary} />
         </View>
 
         <View style={styles.chatInfo}>
-          <Text style={styles.chatTitle} numberOfLines={1}>{item.title}</Text>
-          <Text style={styles.chatLastMessage} numberOfLines={1}>{item.lastMessage}</Text>
+          <Text style={[styles.chatTitle, { color: theme.colors.text }]} numberOfLines={1}>{item.title}</Text>
+          <Text style={[styles.chatLastMessage, { color: theme.colors.textSecondary }]} numberOfLines={1}>{item.lastMessage}</Text>
         </View>
 
         <View style={styles.chatMeta}>
-          <Text style={styles.chatTime}>{formatTime(item.lastMessageTime || item.updated_at)}</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+          <Text style={[styles.chatTime, { color: theme.colors.textTertiary }]}>{formatTime(item.lastMessageTime || item.updated_at)}</Text>
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
         </View>
       </TouchableOpacity>
     );
@@ -196,25 +198,25 @@ export default function ChatsScreen() {
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#7B2FF7" />
+      <View style={[styles.centerContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
         <Text style={styles.headerTitle}>Chats</Text>
       </View>
 
       {/* LISTA */}
       {chats.length === 0 && !refreshing ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="chatbubbles-outline" size={80} color="#d1d5db" />
-          <Text style={styles.emptyTitle}>No tienes consultas</Text>
-          <Text style={styles.emptySubtitle}>
+          <Ionicons name="chatbubbles-outline" size={80} color={theme.colors.textTertiary} />
+          <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>No tienes consultas</Text>
+          <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
             Crea una nueva consulta para hablar con el veterinario virtual
           </Text>
         </View>
@@ -232,14 +234,14 @@ export default function ChatsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#7B2FF7']}
+              colors={[theme.colors.primary]}
             />
           }
         />
       )}
 
       {/* BOTÓN FLOTANTE */}
-      <TouchableOpacity style={styles.fab} onPress={createNewChat}>
+      <TouchableOpacity style={[styles.fab, { backgroundColor: theme.colors.primary }]} onPress={createNewChat}>
         <Ionicons name="add" size={34} color="#fff" />
       </TouchableOpacity>
     </View>
@@ -250,19 +252,16 @@ export default function ChatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
   },
 
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
   },
 
   /* HEADER MORADO */
   header: {
-    backgroundColor: "#7B2FF7",
     paddingTop: 55,
     paddingBottom: 40,
     paddingHorizontal: 25,
@@ -288,7 +287,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#7B2FF7",
     justifyContent: "center",
     alignItems: "center",
     elevation: 6,
@@ -309,16 +307,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 18,
-    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#EFEFF5",
   },
 
   chatIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#F2F1F7",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 14,
@@ -331,13 +326,11 @@ const styles = StyleSheet.create({
   chatTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#222",
     marginBottom: 3,
   },
 
   chatLastMessage: {
     fontSize: 14,
-    color: "#777",
   },
 
   chatMeta: {
@@ -347,7 +340,6 @@ const styles = StyleSheet.create({
 
   chatTime: {
     fontSize: 12,
-    color: "#AAA",
     marginBottom: 4,
   },
 
@@ -386,14 +378,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#333",
     marginTop: 20,
     marginBottom: 8,
   },
 
   emptySubtitle: {
     fontSize: 15,
-    color: "#777",
     textAlign: "center",
     marginBottom: 30,
   },

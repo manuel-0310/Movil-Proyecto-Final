@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { supabase } from "@/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/contexts/ThemeContext";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -37,6 +38,7 @@ interface EditPetModalProps {
 }
 
 export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetModalProps) {
+  const { theme } = useTheme();
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
   const [type, setType] = useState("dog");
@@ -264,10 +266,10 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      {breedModalVisible && (
+          {breedModalVisible && (
         <Modal transparent animationType="fade">
-          <View style={styles.pickerOverlay}>
-            <View style={styles.pickerContainer}>
+          <View style={[styles.pickerOverlay, { backgroundColor: theme.colors.overlay }]}>
+            <View style={[styles.pickerContainer, { backgroundColor: theme.colors.card }]}>
               <ScrollView>
                 {breedList.map((b) => (
                   <TouchableOpacity
@@ -278,7 +280,7 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
                     }}
                     style={{ paddingVertical: 10 }}
                   >
-                    <Text style={{ fontSize: 16 }}>{b}</Text>
+                    <Text style={{ fontSize: 16, color: theme.colors.text }}>{b}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -286,7 +288,7 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
                 style={{ marginTop: 20 }}
                 onPress={() => setBreedModalVisible(false)}
               >
-                <Text style={{ textAlign: "center", color: "red" }}>Cerrar</Text>
+                <Text style={{ textAlign: "center", color: theme.colors.error }}>Cerrar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -294,15 +296,15 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
       )}
 
       <KeyboardAvoidingView
-        style={styles.modalOverlay}
+        style={[styles.modalOverlay, { backgroundColor: theme.colors.overlay }]}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={28} color="#111827" />
+              <Ionicons name="close" size={28} color={theme.colors.text} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Editar Mascota</Text>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Editar Mascota</Text>
             <TouchableOpacity
               onPress={() => {
                 Alert.alert("Eliminar Mascota", `¿Eliminar a ${pet.name}?`, [
@@ -322,13 +324,13 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
                 ]);
               }}
             >
-              <Ionicons name="trash-outline" size={24} color="#EF4444" />
+              <Ionicons name="trash-outline" size={24} color={theme.colors.error} />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalContent}>
             {/* 📸 FOTO */}
-            <Text style={styles.label}>Foto</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Foto</Text>
 
             <TouchableOpacity
               onPress={selectPhoto}
@@ -341,30 +343,43 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
                     source={{ uri: photoUri }}
                     style={styles.petPhoto}
                   />
-                  <View style={styles.cameraOverlay}>
-                    <Ionicons name="camera" size={22} color="#fff" />
+                  <View style={[styles.cameraOverlay, { backgroundColor: theme.colors.primary }]}>
+                    <Ionicons name="camera" size={22} color={theme.colors.textInverse} />
                   </View>
                 </View>
               ) : (
-                <View style={styles.uploadBtn}>
+                <View style={[styles.uploadBtn, { backgroundColor: theme.colors.primary }]}>
                   <Text style={styles.uploadText}>Subir Foto</Text>
-                  <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
+                  <Ionicons name="cloud-upload-outline" size={18} color={theme.colors.textInverse} />
                 </View>
               )}
             </TouchableOpacity>
 
             {/* NOMBRE */}
-            <Text style={styles.label}>Nombre</Text>
-            <TextInput style={styles.input} value={name} onChangeText={setName} />
+            <Text style={[styles.label, { color: theme.colors.text }]}>Nombre</Text>
+            <TextInput 
+              style={[styles.input, { 
+                backgroundColor: theme.colors.cardBackground,
+                color: theme.colors.text,
+                borderColor: theme.colors.border
+              }]} 
+              value={name} 
+              onChangeText={setName}
+              placeholderTextColor={theme.colors.textTertiary}
+            />
 
             {/* TIPO */}
-            <Text style={styles.label}>Tipo de Mascota</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Tipo de Mascota</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.typeRow}>
                 {petTypes.map((p) => (
                   <TouchableOpacity
                     key={p.key}
-                    style={[styles.typeBtn, type === p.key && styles.typeBtnActive]}
+                    style={[
+                      styles.typeBtn, 
+                      { borderColor: theme.colors.border },
+                      type === p.key && [styles.typeBtnActive, { backgroundColor: theme.colors.primary }]
+                    ]}
                     onPress={() => {
                       setType(p.key);
                       setBreed(""); // limpiar selección previa
@@ -382,7 +397,7 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
                       style={{
                         width: 32,
                         height: 32,
-                        tintColor: type === p.key ? "#fff" : "#7B2CBF",
+                        tintColor: type === p.key ? theme.colors.textInverse : theme.colors.primary,
                       }}
                     />
                   </TouchableOpacity>
@@ -391,9 +406,12 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
             </ScrollView>
 
             {/* RAZA */}
-            <Text style={styles.label}>Raza</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Raza</Text>
             <TouchableOpacity
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: theme.colors.cardBackground,
+                borderColor: theme.colors.border
+              }]}
               onPress={() => {
                 if (type === "dog" || type === "cat") {
                   setBreedList(type === "dog" ? dogBreeds : catBreeds);
@@ -401,41 +419,51 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
                 }
               }}
             >
-              <Text style={{ color: breed ? "#000" : "#777" }}>
+              <Text style={{ color: breed ? theme.colors.text : theme.colors.textTertiary }}>
                 {breed || "Seleccionar raza"}
               </Text>
             </TouchableOpacity>
 
             {/* PESO */}
-            <Text style={styles.label}>Peso (kg)</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Peso (kg)</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: theme.colors.cardBackground,
+                color: theme.colors.text,
+                borderColor: theme.colors.border
+              }]}
               value={weight}
               onChangeText={(t) => setWeight(t.replace(/[^0-9.]/g, ""))}
               keyboardType="decimal-pad"
+              placeholderTextColor={theme.colors.textTertiary}
             />
 
             {/* FECHA */}
-            <Text style={styles.label}>Fecha de Nacimiento</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Fecha de Nacimiento</Text>
             <TouchableOpacity onPress={() => setShowDatePicker(true)} activeOpacity={0.8}>
-              <View style={[styles.input, { justifyContent: "center" }]}>
-                <Text style={{ color: "#000" }}>{formatDate(birthday)}</Text>
+              <View style={[styles.input, { 
+                justifyContent: "center",
+                backgroundColor: theme.colors.cardBackground,
+                borderColor: theme.colors.border
+              }]}>
+                <Text style={{ color: theme.colors.text }}>{formatDate(birthday)}</Text>
               </View>
             </TouchableOpacity>
 
             {showDatePicker && (
               <Modal transparent animationType="fade">
                 <TouchableOpacity
-                  style={styles.pickerOverlay}
+                  style={[styles.pickerOverlay, { backgroundColor: theme.colors.overlay }]}
                   activeOpacity={1}
                   onPress={() => setShowDatePicker(false)}
                 >
-                  <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
+                  <View style={[styles.pickerContainer, { backgroundColor: theme.colors.card }]}>
                     <DateTimePicker
                       value={birthday}
                       mode="date"
                       display={Platform.OS === "ios" ? "spinner" : "default"}
                       onChange={onDateChange}
+                      textColor={theme.colors.text}
                     />
                   </View>
                 </TouchableOpacity>
@@ -443,15 +471,23 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
             )}
 
             {/* SEXO */}
-            <Text style={styles.label}>Sexo</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Sexo</Text>
             <View style={styles.sexRow}>
               {["Male", "Female", "Unknown"].map((s) => (
                 <TouchableOpacity
                   key={s}
-                  style={[styles.sexBtn, sex === s && styles.sexBtnActive]}
+                  style={[
+                    styles.sexBtn, 
+                    { borderColor: theme.colors.border },
+                    sex === s && [styles.sexBtnActive, { backgroundColor: theme.colors.primary }]
+                  ]}
                   onPress={() => setSex(s)}
                 >
-                  <Text style={[styles.sexText, sex === s && { color: "#fff" }]}>
+                  <Text style={[
+                    styles.sexText, 
+                    { color: theme.colors.text },
+                    sex === s && { color: theme.colors.textInverse }
+                  ]}>
                     {s === "Male" ? "Macho" : s === "Female" ? "Hembra" : "No lo sé"}
                   </Text>
                 </TouchableOpacity>
@@ -459,12 +495,12 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
             </View>
 
             {/* BOTÓN GUARDAR */}
-            <TouchableOpacity style={styles.createBtn} onPress={handleSave}>
+            <TouchableOpacity style={[styles.createBtn, { backgroundColor: theme.colors.primary }]} onPress={handleSave}>
               <Text style={styles.createText}>Guardar Cambios</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelText}>Cancelar</Text>
+              <Text style={[styles.cancelText, { color: theme.colors.textSecondary }]}>Cancelar</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -474,9 +510,8 @@ export default function EditPetModal({ visible, pet, onClose, onSave }: EditPetM
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  modalOverlay: { flex: 1, justifyContent: "flex-end" },
   modalContainer: {
-    backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: "90%",
@@ -488,33 +523,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
   },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },
+  modalTitle: { fontSize: 18, fontWeight: "700" },
   modalContent: { padding: 25 },
   pickerOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
   pickerContainer: {
-    backgroundColor: "#fff",
     padding: 20,
     borderRadius: 16,
     width: "85%",
     maxHeight: "60%",
   },
-  label: { color: "#000", fontWeight: "600", marginBottom: 6, marginTop: 12 },
+  label: { fontWeight: "600", marginBottom: 6, marginTop: 12 },
   input: {
     borderWidth: 1.5,
-    borderColor: "#7B2CBF",
     borderRadius: 10,
     padding: 12,
     fontSize: 16,
   },
   uploadBtn: {
-    backgroundColor: "#7B2CBF",
     borderRadius: 10,
     padding: 12,
     flexDirection: "row",
@@ -530,24 +560,20 @@ const styles = StyleSheet.create({
     height: 62,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: "#7B2CBF",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
   },
-  typeBtnActive: { backgroundColor: "#7B2CBF", borderColor: "#7B2CBF" },
+  typeBtnActive: { /* Aplicado dinámicamente */ },
   sexRow: { flexDirection: "row", gap: 12, marginTop: 10 },
   sexBtn: {
     borderWidth: 1.5,
-    borderColor: "#7B2CBF",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 10,
   },
-  sexBtnActive: { backgroundColor: "#7B2CBF" },
-  sexText: { color: "#7B2CBF", fontWeight: "600" },
+  sexBtnActive: { /* Aplicado dinámicamente */ },
+  sexText: { fontWeight: "600" },
   createBtn: {
-    backgroundColor: "#7B2CBF",
     borderRadius: 10,
     paddingVertical: 16,
     marginTop: 30,
@@ -555,7 +581,7 @@ const styles = StyleSheet.create({
   },
   createText: { color: "#fff", fontSize: 18, fontWeight: "700" },
   cancelBtn: { padding: 16, alignItems: "center" },
-  cancelText: { color: "#6B7280", fontSize: 16, fontWeight: "600" },
+  cancelText: { fontSize: 16, fontWeight: "600" },
   photoWrapper: {
     position: "relative",
     width: 120,
@@ -567,13 +593,11 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: "#7B2CBF",
   },
   cameraOverlay: {
     position: "absolute",
     bottom: 6,
     right: 6,
-    backgroundColor: "#7B2CBF",
     borderRadius: 18,
     width: 36,
     height: 36,

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/utils/supabase";
+import { useTheme } from "@/contexts/ThemeContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 interface Vaccine {
@@ -35,6 +36,7 @@ export default function EditVaccineModal({
   onClose,
   onSave,
 }: EditVaccineModalProps) {
+  const { theme } = useTheme();
   const [name, setName] = useState(vaccine.name);
   const [date, setDate] = useState(new Date(vaccine.date));
   const [notes, setNotes] = useState(vaccine.notes || "");
@@ -120,38 +122,45 @@ export default function EditVaccineModal({
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
+      <View style={[styles.overlay, { backgroundColor: theme.colors.overlay }]}>
+        <View style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
           {/* HEADER */}
-          <View style={styles.header}>
+          <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={28} color="#111827" />
+              <Ionicons name="close" size={28} color={theme.colors.text} />
             </TouchableOpacity>
-            <Text style={styles.title}>Editar Vacuna</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>Editar Vacuna</Text>
             <TouchableOpacity onPress={handleDelete}>
-              <Ionicons name="trash-outline" size={24} color="#EF4444" />
+              <Ionicons name="trash-outline" size={24} color={theme.colors.error} />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.content}>
             {/* NOMBRE */}
-            <Text style={styles.label}>Nombre de la vacuna *</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Nombre de la vacuna *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: theme.colors.cardBackground,
+                color: theme.colors.text,
+                borderColor: theme.colors.border
+              }]}
               placeholder="ej. Rabia, Parvovirus"
               value={name}
               onChangeText={setName}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.colors.textTertiary}
             />
 
             {/* FECHA */}
-            <Text style={styles.label}>Fecha de aplicación *</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Fecha de aplicación *</Text>
             <TouchableOpacity
-              style={styles.dateButton}
+              style={[styles.dateButton, { 
+                backgroundColor: theme.colors.cardBackground,
+                borderColor: theme.colors.border
+              }]}
               onPress={() => setShowDatePicker(true)}
             >
-              <Text style={styles.dateText}>{formatDate(date)}</Text>
-              <Ionicons name="calendar-outline" size={24} color="#7B2CBF" />
+              <Text style={[styles.dateText, { color: theme.colors.text }]}>{formatDate(date)}</Text>
+              <Ionicons name="calendar-outline" size={24} color={theme.colors.primary} />
             </TouchableOpacity>
 
             {showDatePicker && (
@@ -166,20 +175,28 @@ export default function EditVaccineModal({
             )}
 
             {/* NOTAS */}
-            <Text style={styles.label}>Notas</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Notas</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, { 
+                backgroundColor: theme.colors.cardBackground,
+                color: theme.colors.text,
+                borderColor: theme.colors.border
+              }]}
               placeholder="Agregar notas adicionales..."
               value={notes}
               onChangeText={setNotes}
               multiline
               numberOfLines={4}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.colors.textTertiary}
             />
 
             {/* BOTONES */}
             <TouchableOpacity
-              style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+              style={[
+                styles.saveButton, 
+                { backgroundColor: theme.colors.primary },
+                loading && styles.saveButtonDisabled
+              ]}
               onPress={handleSave}
               disabled={loading}
             >
@@ -189,7 +206,7 @@ export default function EditVaccineModal({
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
+              <Text style={[styles.cancelButtonText, { color: theme.colors.textSecondary }]}>Cancelar</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -201,11 +218,9 @@ export default function EditVaccineModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
   },
   modalContainer: {
-    backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: "90%",
@@ -217,40 +232,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
   },
-  title: { fontSize: 18, fontWeight: "bold", color: "#111827" },
+  title: { fontSize: 18, fontWeight: "bold" },
   content: { padding: 20 },
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
     marginBottom: 8,
     marginTop: 16,
   },
   input: {
     borderWidth: 1.5,
-    borderColor: "#D1D5DB",
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: "#111827",
-    backgroundColor: "#fff",
   },
   textArea: { height: 120, textAlignVertical: "top" },
   dateButton: {
     borderWidth: 1.5,
-    borderColor: "#D1D5DB",
     borderRadius: 12,
     padding: 16,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
   },
-  dateText: { fontSize: 16, color: "#111827" },
+  dateText: { fontSize: 16 },
   saveButton: {
-    backgroundColor: "#7B2CBF",
     padding: 18,
     borderRadius: 12,
     alignItems: "center",
@@ -265,7 +272,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   cancelButtonText: {
-    color: "#6B7280",
     fontSize: 16,
     fontWeight: "600",
   },

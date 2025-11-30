@@ -18,6 +18,7 @@ import { useLocalSearchParams, router, Stack } from "expo-router";
 import { supabase } from "@/utils/supabase";
 import { openai, VETERINARY_SYSTEM_PROMPT } from "@/utils/openai";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Message } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
@@ -26,6 +27,7 @@ import Markdown from "react-native-markdown-display";
 export default function ChatConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const { theme } = useTheme();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -300,22 +302,26 @@ export default function ChatConversationScreen() {
         ]}
       >
         {!isUser && (
-          <View style={styles.avatarContainer}>
-            <Ionicons name="medical" size={20} color="#7B2FF7" />
+          <View style={[styles.avatarContainer, { backgroundColor: theme.colors.primaryLight }]}>
+            <Ionicons name="medical" size={20} color={theme.colors.primary} />
           </View>
         )}
 
         <View
           style={[
             styles.messageBubble,
-            isUser ? styles.userBubble : styles.assistantBubble,
+            isUser 
+              ? [styles.userBubble, { backgroundColor: theme.colors.primary }]
+              : [styles.assistantBubble, { backgroundColor: theme.colors.cardBackground }],
           ]}
         >
           <Markdown
             style={{
               body: {
                 ...styles.messageText,
-                ...(isUser ? styles.userText : styles.assistantText),
+                ...(isUser 
+                  ? [styles.userText, { color: theme.colors.textInverse }]
+                  : [styles.assistantText, { color: theme.colors.text }]),
               },
               strong: { fontWeight: "bold" },
               paragraph: { marginBottom: 6 },
@@ -327,7 +333,9 @@ export default function ChatConversationScreen() {
           <Text
             style={[
               styles.messageTime,
-              isUser ? styles.userTime : styles.assistantTime,
+              isUser 
+                ? [styles.userTime, { color: theme.colors.textInverse + 'CC' }]
+                : [styles.assistantTime, { color: theme.colors.textTertiary }],
             ]}
           >
             {new Date(item.created_at).toLocaleTimeString("es-ES", {
@@ -338,8 +346,8 @@ export default function ChatConversationScreen() {
         </View>
 
         {isUser && (
-          <View style={styles.avatarContainer}>
-            <Ionicons name="person" size={20} color="#3b82f6" />
+          <View style={[styles.avatarContainer, { backgroundColor: theme.colors.primaryLight }]}>
+            <Ionicons name="person" size={20} color={theme.colors.primary} />
           </View>
         )}
       </View>
@@ -351,8 +359,8 @@ export default function ChatConversationScreen() {
    * ---------------------------------------------------------- */
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#7B2FF7" />
+      <View style={[styles.centerContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -365,17 +373,17 @@ export default function ChatConversationScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
         {/* HEADER */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={26} color="#fff" />
+            <Ionicons name="arrow-back" size={26} color={theme.colors.textInverse} />
           </TouchableOpacity>
 
-          <Text numberOfLines={1} style={styles.headerTitle}>
+          <Text numberOfLines={1} style={[styles.headerTitle, { color: theme.colors.textInverse }]}>
             {chatTitle}
           </Text>
 
@@ -395,8 +403,8 @@ export default function ChatConversationScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="chatbubbles-outline" size={64} color="#c3b4ff" />
-              <Text style={styles.emptyText}>
+              <Ionicons name="chatbubbles-outline" size={64} color={theme.colors.primaryLight} />
+              <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
                 Haz tu primera consulta al veterinario virtual
               </Text>
             </View>
@@ -406,11 +414,11 @@ export default function ChatConversationScreen() {
         {/* BURBUJA TYPING */}
         {assistantTyping && (
           <View style={styles.typingContainer}>
-            <View style={styles.avatarContainer}>
-              <Ionicons name="medical" size={20} color="#7B2FF7" />
+            <View style={[styles.avatarContainer, { backgroundColor: theme.colors.primaryLight }]}>
+              <Ionicons name="medical" size={20} color={theme.colors.primary} />
             </View>
 
-            <View style={styles.typingBubble}>
+            <View style={[styles.typingBubble, { backgroundColor: theme.colors.cardBackground }]}>
               {[0, 1, 2].map((i) => (
                 <MotiView
                   key={i}
@@ -422,7 +430,7 @@ export default function ChatConversationScreen() {
                     delay: i * 150,
                     type: "timing",
                   }}
-                  style={styles.dot}
+                  style={[styles.dot, { backgroundColor: theme.colors.primary }]}
                 />
               ))}
             </View>
@@ -430,13 +438,20 @@ export default function ChatConversationScreen() {
         )}
 
         {/* INPUT */}
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { 
+          backgroundColor: theme.colors.background,
+          borderTopColor: theme.colors.border
+        }]}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { 
+              backgroundColor: theme.colors.cardBackground,
+              color: theme.colors.text,
+              borderColor: theme.colors.border
+            }]}
             value={inputText}
             onChangeText={setInputText}
             placeholder="Escribe tu consulta..."
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={theme.colors.textTertiary}
             multiline
             maxLength={500}
             editable={!sending}
@@ -445,25 +460,26 @@ export default function ChatConversationScreen() {
           <TouchableOpacity
             style={[
               styles.sendButton,
+              { backgroundColor: theme.colors.primary },
               (!inputText.trim() || sending) && styles.sendButtonDisabled,
             ]}
             disabled={!inputText.trim() || sending}
             onPress={sendMessage}
           >
             {sending ? (
-              <ActivityIndicator size="small" color="#fff" />
+              <ActivityIndicator size="small" color={theme.colors.textInverse} />
             ) : (
-              <Ionicons name="send" size={20} color="#fff" />
+              <Ionicons name="send" size={20} color={theme.colors.textInverse} />
             )}
           </TouchableOpacity>
         </View>
         
-     
-        
         </KeyboardAvoidingView>
         
-        <View style = {{ alignItems: "center", backgroundColor:"#FFFFFF"}}>
-        <Text style = {{fontSize: 12, color: "#888",paddingBottom:20, position:"fixed", alignItems: "center", textAlign:"center", maxWidth:300, justifyContent:"center"}}>Chat impulsado por IA. No sustituye la atención veterinaria profesional.</Text>
+        <View style={[styles.footerContainer, { backgroundColor: theme.colors.background }]}>
+          <Text style={[styles.footerText, { color: theme.colors.textTertiary }]}>
+            Chat impulsado por IA. No sustituye la atención veterinaria profesional.
+          </Text>
         </View>
          
     </>
@@ -474,7 +490,6 @@ const styles = StyleSheet.create({
   /* GENERAL */
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
 
   centerContainer: {
@@ -485,7 +500,6 @@ const styles = StyleSheet.create({
 
   /* HEADER */
   header: {
-    backgroundColor: "#7B2FF7",
     paddingTop: 70,
     paddingBottom: 25,
     borderRadius: 30,
@@ -498,7 +512,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     fontSize: 20,
-    color: "#fff",
     fontWeight: "700",
     textAlign: "center",
   },
@@ -527,7 +540,6 @@ const styles = StyleSheet.create({
   avatarContainer: {
     width: 36,
     height: 36,
-    backgroundColor: "#F2F1F7",
     borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
@@ -542,12 +554,10 @@ const styles = StyleSheet.create({
   },
 
   userBubble: {
-    backgroundColor: "#A56BFF",
     borderBottomRightRadius: 3,
   },
 
   assistantBubble: {
-    backgroundColor: "#F2F1F7",
     borderBottomLeftRadius: 3,
   },
 
@@ -557,11 +567,11 @@ const styles = StyleSheet.create({
   },
 
   userText: {
-    color: "#fff",
+    // Color aplicado dinámicamente
   },
 
   assistantText: {
-    color: "#333",
+    // Color aplicado dinámicamente
   },
 
   messageTime: {
@@ -570,12 +580,11 @@ const styles = StyleSheet.create({
   },
 
   userTime: {
-    color: "rgba(255,255,255,0.7)",
     textAlign: "right",
   },
 
   assistantTime: {
-    color: "#777",
+    // Color aplicado dinámicamente
   },
 
   /* EMPTY STATE */
@@ -590,7 +599,6 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 14,
     fontSize: 15,
-    color: "#888",
     textAlign: "center",
   },
 
@@ -603,7 +611,6 @@ const styles = StyleSheet.create({
   },
 
   typingBubble: {
-    backgroundColor: "#F2F1F7",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 18,
@@ -615,7 +622,6 @@ const styles = StyleSheet.create({
   dot: {
     width: 8,
     height: 8,
-    backgroundColor: "#aaa",
     borderRadius: 4,
   },
 
@@ -626,31 +632,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderTopWidth: 1,
-    borderTopColor: "#E6E6E6",
-    backgroundColor: "#fff",
   },
 
   input: {
     flex: 1,
-    backgroundColor: "#F2F1F7",
     borderRadius: 25,
     paddingHorizontal: 18,
     paddingVertical: 10,
     fontSize: 15,
     maxHeight: 120,
+    borderWidth: 1,
   },
 
   sendButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#A56BFF",
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 10,
   },
 
   sendButtonDisabled: {
-    backgroundColor: "#D8C9FF",
+    opacity: 0.5,
+  },
+
+  footerContainer: {
+    alignItems: "center",
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+
+  footerText: {
+    fontSize: 12,
+    textAlign: "center",
+    maxWidth: 300,
   },
 });

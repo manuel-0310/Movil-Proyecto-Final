@@ -16,6 +16,7 @@ import {
 import { router } from 'expo-router';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import EditVaccineModal from "@/components/EditVaccineModal";
 import EditMedicalRecordModal from "@/components/EditMedicalRecordModal";
@@ -59,6 +60,7 @@ interface MedicalRecord {
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [userName, setUserName] = useState('');
   const [pets, setPets] = useState<Pet[]>([]);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
@@ -260,9 +262,9 @@ export default function HomeScreen() {
   const hasMoreRecords = medicalRecords.length > 5;
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} showsVerticalScrollIndicator={false}>
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
         <View style={styles.headerTop}>
           <View>
             <Text style={styles.greeting}>Hola, {userName || ''}</Text>
@@ -279,9 +281,9 @@ export default function HomeScreen() {
         </View>
 
         {/* QUICK MESSAGE INPUT */}
-        <View style={styles.quickMessageContainer}>
+        <View style={[styles.quickMessageContainer, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
           <TextInput
-            style={styles.quickMessageInput}
+            style={[styles.quickMessageInput, { color: theme.colors.textInverse }]}
             placeholder="escribe tu mensaje..."
             placeholderTextColor="rgba(255,255,255,0.6)"
             value={message}
@@ -292,15 +294,16 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={[
               styles.sendButton,
+              { backgroundColor: theme.colors.textInverse },
               (!message.trim() || sending) && styles.sendButtonDisabled,
             ]}
             onPress={sendQuickMessage}
             disabled={!message.trim() || sending}
           >
             {sending ? (
-              <ActivityIndicator size="small" color="#7B2CBF" />
+              <ActivityIndicator size="small" color={theme.colors.primary} />
             ) : (
-              <Ionicons name="send" size={20} color="#7B2CBF" />
+              <Ionicons name="send" size={20} color={theme.colors.primary} />
             )}
           </TouchableOpacity>
         </View>
@@ -320,14 +323,19 @@ export default function HomeScreen() {
                 key={pet.id}
                 style={[
                   styles.petChip,
-                  selectedPet?.id === pet.id && styles.petChipSelected,
+                  { 
+                    borderColor: theme.colors.primary,
+                    backgroundColor: theme.colors.card
+                  },
+                  selectedPet?.id === pet.id && { backgroundColor: theme.colors.primary },
                 ]}
                 onPress={() => setSelectedPet(pet)}
               >
                 <Text
                   style={[
                     styles.petChipText,
-                    selectedPet?.id === pet.id && styles.petChipTextSelected,
+                    { color: theme.colors.primary },
+                    selectedPet?.id === pet.id && { color: theme.colors.textInverse },
                   ]}
                 >
                   {pet.name}
@@ -337,10 +345,13 @@ export default function HomeScreen() {
 
             {/* + NEW BUTTON */}
             <TouchableOpacity
-              style={styles.newPetChip}
+              style={[styles.newPetChip, { 
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.card
+              }]}
               onPress={() => router.push('../add-pet')}
             >
-              <Text style={styles.newPetChipText}>+</Text>
+              <Text style={[styles.newPetChipText, { color: theme.colors.textTertiary }]}>+</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -348,20 +359,20 @@ export default function HomeScreen() {
         {/* PET DETAILED CARD */}
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#7B2CBF" />
+            <ActivityIndicator size="large" color={theme.colors.primary} />
           </View>
         ) : selectedPet ? (
           <Animated.View style={{ opacity: fadeAnim }}>
             {/* PET INFO CARD - NUEVA ESTRUCTURA */}
-            <View style={styles.petInfoCard}>
+            <View style={[styles.petInfoCard, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
               {/* HEADER CON FOTO Y NOMBRE */}
               <View style={styles.petCardHeader}>
                 <View style={styles.petPhotoSection}>
                   {selectedPet.photo_url ? (
-                    <Image source={{ uri: selectedPet.photo_url }} style={styles.petPhoto} />
+                    <Image source={{ uri: selectedPet.photo_url }} style={[styles.petPhoto, { borderColor: theme.colors.primary }]} />
                   ) : (
-                    <View style={styles.petPhotoPlaceholder}>
-                      <Ionicons name={getPetIcon(selectedPet.type) as any} size={50} color="#7B2CBF" />
+                    <View style={[styles.petPhotoPlaceholder, { backgroundColor: theme.colors.backgroundTertiary, borderColor: theme.colors.primary }]}>
+                      <Ionicons name={getPetIcon(selectedPet.type) as any} size={50} color={theme.colors.primary} />
                     </View>
                   )}
                 </View>
@@ -369,42 +380,42 @@ export default function HomeScreen() {
                 <View style={styles.petHeaderInfo}>
                   <View style={styles.petNameRow}>
                     <View style={styles.petNameContainer}>
-                      <Text style={styles.petName}>{selectedPet.name}</Text>
-                      <Text style={styles.petBreed}>{selectedPet.breed || 'Sin raza'}</Text>
+                      <Text style={[styles.petName, { color: theme.colors.text }]}>{selectedPet.name}</Text>
+                      <Text style={[styles.petBreed, { color: theme.colors.textSecondary }]}>{selectedPet.breed || 'Sin raza'}</Text>
                     </View>
                     <TouchableOpacity 
-                      style={styles.editButton}
+                      style={[styles.editButton, { backgroundColor: theme.colors.primaryLight }]}
                       onPress={() => setShowEditPetModal(true)}
                     >
-                      <Ionicons name="create-outline" size={22} color="#7B2CBF" />
+                      <Ionicons name="create-outline" size={22} color={theme.colors.primary} />
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
 
               {/* DIVIDER */}
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: theme.colors.borderLight }]} />
 
               {/* BASIC INFO GRID */}
               <View style={styles.basicInfo}>
                 <View style={styles.infoRow}>
-                  <View style={styles.infoItem}>
-                    <View style={styles.infoIconContainer}>
-                      <Ionicons name="calendar-outline" size={18} color="#7B2CBF" />
+                  <View style={[styles.infoItem, { backgroundColor: theme.colors.cardBackground }]}>
+                    <View style={[styles.infoIconContainer, { backgroundColor: theme.colors.primaryLight }]}>
+                      <Ionicons name="calendar-outline" size={18} color={theme.colors.primary} />
                     </View>
                     <View>
-                      <Text style={styles.infoLabel}>Edad</Text>
-                      <Text style={styles.infoValue}>{calculateAge(selectedPet.birthday)}</Text>
+                      <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Edad</Text>
+                      <Text style={[styles.infoValue, { color: theme.colors.text }]}>{calculateAge(selectedPet.birthday)}</Text>
                     </View>
                   </View>
 
-                  <View style={styles.infoItem}>
-                    <View style={styles.infoIconContainer}>
-                      <Ionicons name={selectedPet.sex === 'Male' ? 'male' : 'female'} size={18} color="#7B2CBF" />
+                  <View style={[styles.infoItem, { backgroundColor: theme.colors.cardBackground }]}>
+                    <View style={[styles.infoIconContainer, { backgroundColor: theme.colors.primaryLight }]}>
+                      <Ionicons name={selectedPet.sex === 'Male' ? 'male' : 'female'} size={18} color={theme.colors.primary} />
                     </View>
                     <View>
-                      <Text style={styles.infoLabel}>Sexo</Text>
-                      <Text style={styles.infoValue}>
+                      <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Sexo</Text>
+                      <Text style={[styles.infoValue, { color: theme.colors.text }]}>
                         {selectedPet.sex === 'Male' ? 'Macho' : selectedPet.sex === 'Female' ? 'Hembra' : 'Unknown'}
                       </Text>
                     </View>
@@ -412,23 +423,23 @@ export default function HomeScreen() {
                 </View>
 
                 <View style={styles.infoRow}>
-                  <View style={styles.infoItem}>
-                    <View style={styles.infoIconContainer}>
-                      <Ionicons name="scale-outline" size={18} color="#7B2CBF" />
+                  <View style={[styles.infoItem, { backgroundColor: theme.colors.cardBackground }]}>
+                    <View style={[styles.infoIconContainer, { backgroundColor: theme.colors.primaryLight }]}>
+                      <Ionicons name="scale-outline" size={18} color={theme.colors.primary} />
                     </View>
                     <View>
-                      <Text style={styles.infoLabel}>Peso</Text>
-                      <Text style={styles.infoValue}>{selectedPet.weight} kg</Text>
+                      <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Peso</Text>
+                      <Text style={[styles.infoValue, { color: theme.colors.text }]}>{selectedPet.weight} kg</Text>
                     </View>
                   </View>
 
-                  <View style={styles.infoItem}>
-                    <View style={styles.infoIconContainer}>
-                      <Ionicons name="person-outline" size={18} color="#7B2CBF" />
+                  <View style={[styles.infoItem, { backgroundColor: theme.colors.cardBackground }]}>
+                    <View style={[styles.infoIconContainer, { backgroundColor: theme.colors.primaryLight }]}>
+                      <Ionicons name="person-outline" size={18} color={theme.colors.primary} />
                     </View>
                     <View>
-                      <Text style={styles.infoLabel}>Dueño</Text>
-                      <Text style={styles.infoValue} numberOfLines={1}>
+                      <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Dueño</Text>
+                      <Text style={[styles.infoValue, { color: theme.colors.text }]} numberOfLines={1}>
                         {userName}
                       </Text>
                     </View>
@@ -440,11 +451,11 @@ export default function HomeScreen() {
             {/* VACCINES SECTION */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Vacunas</Text>
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Vacunas</Text>
                 <TouchableOpacity
                   onPress={() => router.push({ pathname: '/add-vaccine', params: { petId: selectedPet.id } })}
                 >
-                  <Text style={styles.addButton}>Agregar vacuna</Text>
+                  <Text style={[styles.addButton, { color: theme.colors.primary }]}>Agregar vacuna</Text>
                 </TouchableOpacity>
               </View>
 
@@ -453,48 +464,48 @@ export default function HomeScreen() {
                   {displayedVaccines.map((vaccine) => (
                     <TouchableOpacity
                       key={vaccine.id}
-                      style={styles.listItem}
+                      style={[styles.listItem, { backgroundColor: theme.colors.cardBackground }]}
                       onPress={() => {
                         setSelectedVaccine(vaccine);
                         setShowEditVaccineModal(true);
                       }}
                     >
-                      <View style={styles.listIcon}>
-                        <Ionicons name="medical" size={24} color="#7B2CBF" />
+                      <View style={[styles.listIcon, { backgroundColor: theme.colors.primaryLight }]}>
+                        <Ionicons name="medical" size={24} color={theme.colors.primary} />
                       </View>
                       <View style={styles.listContent}>
-                        <Text style={styles.listTitle}>{vaccine.name}</Text>
+                        <Text style={[styles.listTitle, { color: theme.colors.text }]}>{vaccine.name}</Text>
                         {vaccine.notes && (
-                          <Text style={styles.listSubtitle} numberOfLines={1}>
+                          <Text style={[styles.listSubtitle, { color: theme.colors.textSecondary }]} numberOfLines={1}>
                             {vaccine.notes}
                           </Text>
                         )}
                       </View>
-                      <Text style={styles.listDate}>{formatDate(vaccine.date)}</Text>
+                      <Text style={[styles.listDate, { color: theme.colors.textTertiary }]}>{formatDate(vaccine.date)}</Text>
                     </TouchableOpacity>
                   ))}
                   
                   {/* BOTÓN VER MÁS / VER MENOS */}
                   {hasMoreVaccines && (
                     <TouchableOpacity
-                      style={styles.viewMoreButton}
+                      style={[styles.viewMoreButton, { backgroundColor: theme.colors.cardBackground }]}
                       onPress={() => setShowAllVaccines(!showAllVaccines)}
                     >
-                      <Text style={styles.viewMoreText}>
+                      <Text style={[styles.viewMoreText, { color: theme.colors.primary }]}>
                         {showAllVaccines ? 'Ver menos' : `Ver más (${vaccines.length - 5} más)`}
                       </Text>
                       <Ionicons 
                         name={showAllVaccines ? 'chevron-up' : 'chevron-down'} 
                         size={18} 
-                        color="#7B2CBF" 
+                        color={theme.colors.primary} 
                       />
                     </TouchableOpacity>
                   )}
                 </>
               ) : (
                 <View style={styles.emptyState}>
-                  <Ionicons name="medical-outline" size={48} color="#D1D5DB" />
-                  <Text style={styles.emptyText}>No hay vacunas registradas</Text>
+                  <Ionicons name="medical-outline" size={48} color={theme.colors.textTertiary} />
+                  <Text style={[styles.emptyText, { color: theme.colors.textTertiary }]}>No hay vacunas registradas</Text>
                 </View>
               )}
             </View>
@@ -502,11 +513,11 @@ export default function HomeScreen() {
             {/* MEDICAL HISTORY SECTION */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Historial médico</Text>
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Historial médico</Text>
                 <TouchableOpacity
                   onPress={() => router.push({ pathname: '/add-medical-record', params: { petId: selectedPet.id } })}
                 >
-                  <Text style={styles.addButton}>Nuevo registro</Text>
+                  <Text style={[styles.addButton, { color: theme.colors.primary }]}>Nuevo registro</Text>
                 </TouchableOpacity>
               </View>
 
@@ -515,57 +526,57 @@ export default function HomeScreen() {
                   {displayedRecords.map((record) => (
                     <TouchableOpacity
                       key={record.id}
-                      style={styles.listItem}
+                      style={[styles.listItem, { backgroundColor: theme.colors.cardBackground }]}
                       onPress={() => {
                         setSelectedRecord(record);
                         setShowEditRecordModal(true);
                       }}
                     >
-                      <View style={styles.listIcon}>
-                        <Ionicons name="add-circle" size={24} color="#7B2CBF" />
+                      <View style={[styles.listIcon, { backgroundColor: theme.colors.primaryLight }]}>
+                        <Ionicons name="add-circle" size={24} color={theme.colors.primary} />
                       </View>
                       <View style={styles.listContent}>
-                        <Text style={styles.listTitle}>{record.title}</Text>
+                        <Text style={[styles.listTitle, { color: theme.colors.text }]}>{record.title}</Text>
                         {record.description && (
-                          <Text style={styles.listSubtitle} numberOfLines={1}>
+                          <Text style={[styles.listSubtitle, { color: theme.colors.textSecondary }]} numberOfLines={1}>
                             {record.description}
                           </Text>
                         )}
                       </View>
-                      <Text style={styles.listDate}>{formatDate(record.date)}</Text>
+                      <Text style={[styles.listDate, { color: theme.colors.textTertiary }]}>{formatDate(record.date)}</Text>
                     </TouchableOpacity>
                   ))}
                   
                   {/* BOTÓN VER MÁS / VER MENOS */}
                   {hasMoreRecords && (
                     <TouchableOpacity
-                      style={styles.viewMoreButton}
+                      style={[styles.viewMoreButton, { backgroundColor: theme.colors.cardBackground }]}
                       onPress={() => setShowAllRecords(!showAllRecords)}
                     >
-                      <Text style={styles.viewMoreText}>
+                      <Text style={[styles.viewMoreText, { color: theme.colors.primary }]}>
                         {showAllRecords ? 'Ver menos' : `Ver más (${medicalRecords.length - 5} más)`}
                       </Text>
                       <Ionicons 
                         name={showAllRecords ? 'chevron-up' : 'chevron-down'} 
                         size={18} 
-                        color="#7B2CBF" 
+                        color={theme.colors.primary} 
                       />
                     </TouchableOpacity>
                   )}
                 </>
               ) : (
                 <View style={styles.emptyState}>
-                  <Ionicons name="document-text-outline" size={48} color="#D1D5DB" />
-                  <Text style={styles.emptyText}>No hay historial médico</Text>
+                  <Ionicons name="document-text-outline" size={48} color={theme.colors.textTertiary} />
+                  <Text style={[styles.emptyText, { color: theme.colors.textTertiary }]}>No hay historial médico</Text>
                 </View>
               )}
             </View>
           </Animated.View>
         ) : (
           <View style={styles.noPetsContainer}>
-            <Ionicons name="paw-outline" size={80} color="#D1D5DB" />
-            <Text style={styles.noPetsTitle}>No tienes mascotas</Text>
-            <Text style={styles.noPetsSubtitle}>
+            <Ionicons name="paw-outline" size={80} color={theme.colors.textTertiary} />
+            <Text style={[styles.noPetsTitle, { color: theme.colors.text }]}>No tienes mascotas</Text>
+            <Text style={[styles.noPetsSubtitle, { color: theme.colors.textSecondary }]}>
               Crea tu primera mascota para comenzar
             </Text>
           </View>
@@ -617,12 +628,10 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
 
   /* HEADER */
   header: {
-    backgroundColor: '#7B2FF7',
     paddingTop: 60,
     paddingBottom: 30,
     paddingHorizontal: 25,
@@ -674,7 +683,6 @@ const styles = StyleSheet.create({
   quickMessageContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 30,
     paddingHorizontal: 15,
     paddingVertical: 8,
@@ -682,7 +690,6 @@ const styles = StyleSheet.create({
 
   quickMessageInput: {
     flex: 1,
-    color: '#fff',
     fontSize: 15,
     maxHeight: 80,
     paddingVertical: 8,
@@ -692,7 +699,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 10,
@@ -723,22 +729,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#7B2FF7',
-    backgroundColor: '#fff',
-  },
-
-  petChipSelected: {
-    backgroundColor: '#7B2FF7',
   },
 
   petChipText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#7B2FF7',
-  },
-
-  petChipTextSelected: {
-    color: '#fff',
   },
 
   newPetChip: {
@@ -746,21 +741,16 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#fff',
   },
 
   newPetChipText: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#9CA3AF',
   },
 
   /* PET INFO CARD - NUEVA ESTRUCTURA */
   petInfoCard: {
-    backgroundColor: '#fff',
     borderRadius: 20,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -785,16 +775,13 @@ const styles = StyleSheet.create({
     height: 90,
     borderRadius: 45,
     borderWidth: 3,
-    borderColor: '#7B2CBF',
   },
 
   petPhotoPlaceholder: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: '#F3F4F6',
     borderWidth: 3,
-    borderColor: '#7B2CBF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -816,20 +803,17 @@ const styles = StyleSheet.create({
   petName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 4,
   },
 
   petBreed: {
     fontSize: 15,
-    color: '#6B7280',
   },
 
   editButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3E8FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 12,
@@ -837,7 +821,6 @@ const styles = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor: '#F3F4F6',
     marginHorizontal: 20,
   },
 
@@ -856,7 +839,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
     padding: 14,
     borderRadius: 12,
     gap: 12,
@@ -866,14 +848,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3E8FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   infoLabel: {
     fontSize: 12,
-    color: '#6B7280',
     marginBottom: 2,
     fontWeight: '500',
   },
@@ -881,7 +861,6 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#111827',
   },
 
   /* SECTIONS */
@@ -899,12 +878,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#111827',
   },
 
   addButton: {
     fontSize: 14,
-    color: '#7B2CBF',
     fontWeight: '600',
   },
 
@@ -912,7 +889,6 @@ const styles = StyleSheet.create({
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
@@ -922,7 +898,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F3E8FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -935,18 +910,15 @@ const styles = StyleSheet.create({
   listTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
     marginBottom: 2,
   },
 
   listSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
   },
 
   listDate: {
     fontSize: 12,
-    color: '#9CA3AF',
     fontWeight: '500',
   },
 
@@ -955,7 +927,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F9FAFB',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -965,7 +936,6 @@ const styles = StyleSheet.create({
 
   viewMoreText: {
     fontSize: 14,
-    color: '#7B2CBF',
     fontWeight: '600',
   },
 
@@ -977,7 +947,6 @@ const styles = StyleSheet.create({
 
   emptyText: {
     fontSize: 14,
-    color: '#9CA3AF',
     marginTop: 8,
   },
 
@@ -990,14 +959,12 @@ const styles = StyleSheet.create({
   noPetsTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#111827',
     marginTop: 20,
     marginBottom: 8,
   },
 
   noPetsSubtitle: {
     fontSize: 16,
-    color: '#6B7280',
     textAlign: 'center',
     marginBottom: 25,
   },
