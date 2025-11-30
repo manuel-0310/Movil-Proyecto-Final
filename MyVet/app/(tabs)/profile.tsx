@@ -1,6 +1,8 @@
 // app/(tabs)/profile.tsx
 import React, { useState, useEffect } from 'react';
 import { sendImmediateAINotification } from "@/utils/aiNotifications";
+import PremiumModal from "@/components/PremiumModal";
+
 import {
   View,
   Text,
@@ -50,6 +52,8 @@ export default function ProfileScreen() {
   const [editPetVisible, setEditPetVisible] = useState(false);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [premiumModalVisible, setPremiumModalVisible] = useState(false);
+  
 
   useEffect(() => {
     if (user) {
@@ -369,8 +373,19 @@ export default function ProfileScreen() {
           style={styles.aiButton}
         >
           <Ionicons name="sparkles-outline" size={20} color="#FFF" />
-          <Text style={styles.aiButtonText}>Dato curioso IA</Text>
+          <Text style={styles.aiButtonText}>Enviar notificación</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+  onPress={() => setPremiumModalVisible(true)}
+  style={styles.aiButton}
+>
+  <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: "700" }}>
+    ⭐ Quiero ser Premium
+  </Text>
+</TouchableOpacity>
+
+
 
 
 
@@ -395,6 +410,11 @@ export default function ProfileScreen() {
           }}
         />
       )}
+      <PremiumModal
+  visible={premiumModalVisible}
+  onClose={() => setPremiumModalVisible(false)}
+/>
+
 
       {selectedPet && (
         <EditPetModal
